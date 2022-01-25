@@ -1,0 +1,25 @@
+[package]
+name = "rest"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+path = "src/main.rs"
+name = "rest"
+
+[dependencies]
+tokio = { version = "1.15.0", features = ["macros", "rt-multi-thread"] }
+actix-web = "4.0.0-beta.21"
+
+[dev-dependencies]
+reqwest = "0.11.9"
+
+[profile.release]
+opt-level = "z"
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = true
