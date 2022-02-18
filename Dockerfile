@@ -22,7 +22,8 @@ RUN apt-get update -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/target/release/battlemon_rest /app/config.yaml /app/scripts/entry_point.sh ./
+COPY --from=builder /app/target/release/battlemon_rest /app/scripts/entry_point.sh ./
+COPY configuration ./configuration
 
 RUN chmod +x entry_point.sh
 
