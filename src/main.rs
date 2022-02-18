@@ -1,6 +1,6 @@
 use std::net::TcpListener;
 
-use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 
 use battlemon_rest::{config, startup, telemetry};
 
@@ -11,11 +11,12 @@ async fn main() -> std::io::Result<()> {
     tracing::info!("Loading app config");
     let config = config::get_config().expect("Failed to read configuration");
     tracing::info!("Connection to Postgres");
-    let pool = PgPool::connect(&config.database.conn_string())
-        .await
-        .expect("Failed to connect to Postgres");
-    let address = format!("0.0.0.0:{}", config.app_port);
+    let conn_pool = PgPoolOptions::new()
+        .connect_timeout(std::time::Duration::from_secs(2))
+        .connect_lazy_with(config.database.with_db());
+
+    let address = format!("{}:{}", config.application.host, config.application.port);
     tracing::info!("Binding address for app: {}", address);
     let listener = TcpListener::bind(address)?;
-    startup::run(listener, pool)?.await
+    startup::run(listener, conn_pool)?.await
 }
