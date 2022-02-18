@@ -1,36 +1,22 @@
 use actix_web::{web, HttpResponse};
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use chrono::{Duration, Utc};
 use sqlx::PgPool;
-use uuid::Uuid;
 
-#[derive(Deserialize, Debug)]
-pub struct Pagination {
-    limit: i64,
-    offset: i64,
-}
+use crate::routes::{Pagination, Sale};
 
-#[derive(Serialize)]
-struct Sale {
-    id: Uuid,
-    prev_owner: String,
-    curr_owner: String,
-    token_id: String,
-    price: String,
-    date: DateTime<Utc>,
-}
-
-pub async fn sales(
+pub async fn paid(
     pagination: web::Query<Pagination>,
     pool: web::Data<PgPool>,
 ) -> actix_web::HttpResponse {
+    let now = Utc::now();
+    let days = pagination.days.unwrap_or_default();
+    let start_from = now - Duration::days(days);
     let rows = sqlx::query_as!(
         Sale,
         r#"
-        SELECT * FROM sales ORDER BY id LIMIT $1 OFFSET $2;
+        SELECT * FROM sales WHERE date >= $1;
         "#,
-        pagination.limit,
-        pagination.offset
+        start_from,
     )
     .fetch_all(pool.get_ref())
     .await;
