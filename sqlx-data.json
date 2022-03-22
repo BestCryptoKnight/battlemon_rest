@@ -1,5 +1,55 @@
 {
   "db": "PostgreSQL",
+  "33fdd2f6a6ac0e3378574ac7de3b9416975938bd4db909b6a9742ded2aa5a13d": {
+    "query": "\n        SELECT * FROM sales WHERE date >= $1;\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "prev_owner",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "curr_owner",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "token_id",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "price",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 5,
+          "name": "date",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Timestamptz"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "da308b241da2abf5960e5c322a9ff70213d4fcda05443a54adf1d5ff8d7d3223": {
     "query": "\n        SELECT * FROM sales ORDER BY id LIMIT $1 OFFSET $2;\n        ",
     "describe": {
@@ -27,7 +77,7 @@
         {
           "ordinal": 4,
           "name": "price",
-          "type_info": "Text"
+          "type_info": "Int8"
         },
         {
           "ordinal": 5,
