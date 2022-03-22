@@ -36,7 +36,7 @@ pub async fn paid(
             HttpResponse::Ok().json(json)
         }
         Err(e) => {
-            println!("Failed to execute query: {}", e);
+            println!("Failed to execute query: {:?}", e);
             HttpResponse::InternalServerError().finish()
         }
     }

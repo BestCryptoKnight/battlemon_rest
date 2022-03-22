@@ -42,7 +42,7 @@ pub async fn sale(
     match rows {
         Ok(rows) => HttpResponse::Ok().json(rows),
         Err(e) => {
-            println!("Failed to execute query: {}", e);
+            println!("Failed to execute query: {:?}", e);
             HttpResponse::InternalServerError().finish()
         }
     }
