@@ -1,5 +1,6 @@
 use actix_web::{web, HttpResponse};
 use chrono::{DateTime, Utc};
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -17,7 +18,7 @@ pub struct Sale {
     pub prev_owner: String,
     pub curr_owner: String,
     pub token_id: String,
-    pub price: i64,
+    pub price: Decimal,
     pub date: DateTime<Utc>,
 }
 
