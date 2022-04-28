@@ -1,5 +1,6 @@
 use actix_web::{web, HttpResponse};
 use chrono::{Duration, Utc};
+use rust_decimal::Decimal;
 use serde_json::json;
 use sqlx::PgPool;
 
@@ -42,9 +43,9 @@ pub async fn paid(
     }
 }
 
-fn calculate_report(rows: &[Sale]) -> (u64, u64) {
-    let mut top_sale = 0;
-    let mut total_sale_volume = 0;
+fn calculate_report(rows: &[Sale]) -> (Decimal, Decimal) {
+    let mut top_sale = Decimal::default();
+    let mut total_sale_volume = Decimal::default();
     for row in rows {
         if row.price > top_sale {
             top_sale = row.price
@@ -53,12 +54,13 @@ fn calculate_report(rows: &[Sale]) -> (u64, u64) {
         total_sale_volume += row.price
     }
 
-    (top_sale as u64, total_sale_volume as u64)
+    (top_sale, total_sale_volume)
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use rust_decimal_macros::dec;
 
     impl Default for Sale {
         fn default() -> Self {
@@ -77,61 +79,61 @@ mod test {
     fn calculate_report_empty() {
         let rows = vec![];
         let (top_sale, total_sale_volume) = calculate_report(&rows);
-        assert_eq!(top_sale, 0);
-        assert_eq!(total_sale_volume, 0);
+        assert_eq!(top_sale, Decimal::default());
+        assert_eq!(total_sale_volume, Decimal::default());
     }
 
     #[test]
     fn calculate_report_one_sale() {
         let sale = Sale {
-            price: 10,
+            price: dec!(10),
             ..Sale::default()
         };
 
         let rows = vec![sale];
         let (top_sale, total_sale_volume) = calculate_report(&rows);
-        assert_eq!(top_sale, 10);
-        assert_eq!(total_sale_volume, 10);
+        assert_eq!(top_sale, dec!(10));
+        assert_eq!(total_sale_volume, dec!(10));
     }
 
     #[test]
     fn calculate_report_two_sale() {
         let sale0 = Sale {
-            price: 1,
+            price: dec!(1),
             ..Sale::default()
         };
 
         let sale1 = Sale {
-            price: 10,
+            price: dec!(10),
             ..Sale::default()
         };
 
         let rows = vec![sale0, sale1];
         let (top_sale, total_sale_volume) = calculate_report(&rows);
-        assert_eq!(top_sale, 10);
-        assert_eq!(total_sale_volume, 11);
+        assert_eq!(top_sale, dec!(10));
+        assert_eq!(total_sale_volume, dec!(11));
     }
 
     #[test]
     fn calculate_report_tree_sale() {
         let sale0 = Sale {
-            price: 5,
+            price: dec!(5),
             ..Sale::default()
         };
 
         let sale1 = Sale {
-            price: 3,
+            price: dec!(3),
             ..Sale::default()
         };
 
         let sale2 = Sale {
-            price: 1,
+            price: dec!(1),
             ..Sale::default()
         };
 
         let rows = vec![sale0, sale1, sale2];
         let (top_sale, total_sale_volume) = calculate_report(&rows);
-        assert_eq!(top_sale, 5);
-        assert_eq!(total_sale_volume, 9);
+        assert_eq!(top_sale, dec!(5));
+        assert_eq!(total_sale_volume, dec!(9));
     }
 }
