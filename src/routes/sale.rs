@@ -1,7 +1,7 @@
 use actix_web::{web, HttpResponse};
 use chrono::{DateTime, Utc};
-use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use sqlx::types::Decimal;
 use sqlx::PgPool;
 use uuid::Uuid;
 
