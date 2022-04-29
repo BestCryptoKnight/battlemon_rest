@@ -80,8 +80,8 @@ mod test {
     fn calculate_report_empty() {
         let rows = vec![];
         let (top_sale, total_sale_volume) = calculate_report(&rows);
-        assert_eq!(top_sale, Decimal::default());
-        assert_eq!(total_sale_volume, Decimal::default());
+        assert_eq!(top_sale, Decimal::zero());
+        assert_eq!(total_sale_volume, Decimal::zero());
     }
 
     #[test]
