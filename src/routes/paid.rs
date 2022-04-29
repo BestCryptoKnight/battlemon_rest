@@ -1,5 +1,6 @@
 use actix_web::{web, HttpResponse};
 use chrono::{Duration, Utc};
+use rust_decimal::prelude::Zero;
 use rust_decimal::Decimal;
 use serde_json::json;
 use sqlx::PgPool;
@@ -44,8 +45,8 @@ pub async fn paid(
 }
 
 fn calculate_report(rows: &[Sale]) -> (Decimal, Decimal) {
-    let mut top_sale = Decimal::default();
-    let mut total_sale_volume = Decimal::default();
+    let mut top_sale = Decimal::zero();
+    let mut total_sale_volume = Decimal::zero();
     for row in rows {
         if row.price > top_sale {
             top_sale = row.price
