@@ -12,7 +12,7 @@ pub async fn paid(
     pool: web::Data<PgPool>,
 ) -> actix_web::HttpResponse {
     let now = Utc::now();
-    let days = pagination.days.unwrap_or_default();
+    let days = pagination.days.unwrap_or(1);
     let start_from = now - Duration::days(days);
     let rows = sqlx::query_as!(
         Sale,
