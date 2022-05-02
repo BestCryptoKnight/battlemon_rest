@@ -289,6 +289,7 @@ dependencies = [
  "chrono",
  "config",
  "fake",
+ "nft_models",
  "rand 0.8.5",
  "reqwest",
  "rust_decimal",
@@ -296,7 +297,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sqlx",
- "token_metadata_ext",
  "tokio",
  "tracing",
  "tracing-bunyan-formatter",
@@ -2701,15 +2701,6 @@ name = "tinyvec_macros"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
-
-[[package]]
-name = "token_metadata_ext"
-version = "0.1.0"
-dependencies = [
- "near-contract-standards",
- "near-sdk",
- "nft_models",
-]
 
 [[package]]
 name = "tokio"
