@@ -14,6 +14,7 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<actix_web::dev::Server
             .route("/health_check", web::get().to(routes::health_check))
             .route("/sales", web::get().to(routes::sale))
             .route("/paid", web::get().to(routes::paid))
+            .route("/nft_tokens", web::get().to(routes::nft_tokens))
             .app_data(pool.clone())
     })
     .listen(listener)?
