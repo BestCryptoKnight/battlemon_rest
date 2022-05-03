@@ -13,7 +13,7 @@ name = "battlemon_rest"
 [dependencies]
 tokio = { version = "1.16.1", features = ["macros", "rt-multi-thread"] }
 actix-web = "4.0.0-rc.2"
-sqlx = { version = "0.5.10", default-features = false, features = ["runtime-actix-rustls", "macros", "postgres", "uuid", "chrono", "migrate", "offline", "decimal", "json"] }
+sqlx = { version = "0.5.13", default-features = false, features = ["runtime-actix-rustls", "macros", "postgres", "uuid", "chrono", "migrate", "offline", "decimal", "json"] }
 rust_decimal = "1.23.1"
 rust_decimal_macros = "1.23.1"
 serde = { version = "1.0.136", features = ["derive"] }

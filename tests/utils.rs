@@ -19,7 +19,11 @@ pub async fn spawn_app() -> TestApp {
         battlemon_rest::startup::run(listener, db_pool.clone()).expect("Failed to bind address");
 
     let _ = tokio::spawn(server);
-    TestApp { address, db_pool }
+    TestApp {
+        address,
+        db_pool,
+        db_name: config.database.database_name,
+    }
 }
 
 pub async fn configure_db(config: &DatabaseSettings) -> PgPool {
@@ -35,7 +39,7 @@ pub async fn configure_db(config: &DatabaseSettings) -> PgPool {
         .await
         .expect("Failed to connect to Postgres");
 
-    sqlx::migrate!("./migrations")
+    sqlx::migrate!("../../migrations/migrations")
         .run(&conn_pool)
         .await
         .expect("Failed to migrate the database");
@@ -46,4 +50,5 @@ pub async fn configure_db(config: &DatabaseSettings) -> PgPool {
 pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
+    pub db_name: String,
 }

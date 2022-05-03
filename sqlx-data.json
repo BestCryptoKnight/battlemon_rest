@@ -1,96 +1,126 @@
 {
   "db": "PostgreSQL",
-  "33fdd2f6a6ac0e3378574ac7de3b9416975938bd4db909b6a9742ded2aa5a13d": {
-    "query": "\n        SELECT * FROM sales WHERE date >= $1;\n        ",
+  "24d601172999301f910dd1020374101cde350a2724ab33a041ea6f01246dd582": {
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Uuid"
         },
         {
+          "name": "owner_id",
           "ordinal": 1,
-          "name": "prev_owner",
           "type_info": "Text"
         },
         {
-          "ordinal": 2,
-          "name": "curr_owner",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
           "name": "token_id",
+          "ordinal": 2,
           "type_info": "Text"
         },
         {
-          "ordinal": 4,
-          "name": "price",
-          "type_info": "Int8"
+          "name": "media",
+          "ordinal": 3,
+          "type_info": "Text"
         },
         {
+          "name": "model: Json<ModelKind>",
+          "ordinal": 4,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "db_created_at",
           "ordinal": 5,
-          "name": "date",
           "type_info": "Timestamptz"
+        },
+        {
+          "name": "copies",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "expires_at",
+          "ordinal": 8,
+          "type_info": "Text"
+        },
+        {
+          "name": "issued_at",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 10,
+          "type_info": "Text"
+        },
+        {
+          "name": "media_hash",
+          "ordinal": 11,
+          "type_info": "Text"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Timestamptz"
-        ]
-      },
       "nullable": [
         false,
         false,
         false,
         false,
         false,
-        false
-      ]
-    }
-  },
-  "da308b241da2abf5960e5c322a9ff70213d4fcda05443a54adf1d5ff8d7d3223": {
-    "query": "\n        SELECT * FROM sales ORDER BY id LIMIT $1 OFFSET $2;\n        ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "prev_owner",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "curr_owner",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "token_id",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "price",
-          "type_info": "Int8"
-        },
-        {
-          "ordinal": 5,
-          "name": "date",
-          "type_info": "Timestamptz"
-        }
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
       ],
       "parameters": {
         "Left": [
           "Int8",
           "Int8"
         ]
-      },
+      }
+    },
+    "query": "\n        SELECT id, owner_id, token_id, media, model as \"model: Json<ModelKind>\", db_created_at, copies, description, expires_at, issued_at, title, media_hash\n        FROM nft_tokens ORDER BY id LIMIT $1 OFFSET $2;\n        "
+  },
+  "33fdd2f6a6ac0e3378574ac7de3b9416975938bd4db909b6a9742ded2aa5a13d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "prev_owner",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "curr_owner",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "token_id",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "price",
+          "ordinal": 4,
+          "type_info": "Numeric"
+        },
+        {
+          "name": "date",
+          "ordinal": 5,
+          "type_info": "Timestamptz"
+        }
+      ],
       "nullable": [
         false,
         false,
@@ -98,7 +128,64 @@
         false,
         false,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Timestamptz"
+        ]
+      }
+    },
+    "query": "\n        SELECT * FROM sales WHERE date >= $1;\n        "
+  },
+  "da308b241da2abf5960e5c322a9ff70213d4fcda05443a54adf1d5ff8d7d3223": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "prev_owner",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "curr_owner",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "token_id",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "price",
+          "ordinal": 4,
+          "type_info": "Numeric"
+        },
+        {
+          "name": "date",
+          "ordinal": 5,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "\n        SELECT * FROM sales ORDER BY id LIMIT $1 OFFSET $2;\n        "
   }
 }
