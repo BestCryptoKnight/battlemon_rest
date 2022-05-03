@@ -6,7 +6,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(Deserialize, Debug)]
-pub struct Pagination {
+pub struct Filter {
     pub limit: Option<i64>,
     pub offset: Option<i64>,
     pub days: Option<i64>,
@@ -23,11 +23,11 @@ pub struct Sale {
 }
 
 pub async fn sale(
-    pagination: web::Query<Pagination>,
+    filter: web::Query<Filter>,
     pool: web::Data<PgPool>,
 ) -> actix_web::HttpResponse {
-    let limit = pagination.limit.unwrap_or(100);
-    let offset = pagination.offset.unwrap_or_default();
+    let limit = filter.limit.unwrap_or(100);
+    let offset = filter.offset.unwrap_or_default();
 
     let rows = sqlx::query_as!(
         Sale,

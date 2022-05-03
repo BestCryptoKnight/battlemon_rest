@@ -5,14 +5,14 @@ use rust_decimal::Decimal;
 use serde_json::json;
 use sqlx::PgPool;
 
-use crate::routes::{Pagination, Sale};
+use crate::routes::{Filter, Sale};
 
 pub async fn paid(
-    pagination: web::Query<Pagination>,
+    filter: web::Query<Filter>,
     pool: web::Data<PgPool>,
 ) -> actix_web::HttpResponse {
     let now = Utc::now();
-    let days = pagination.days.unwrap_or(1);
+    let days = filter.days.unwrap_or(1);
     let start_from = now - Duration::days(days);
     let rows = sqlx::query_as!(
         Sale,

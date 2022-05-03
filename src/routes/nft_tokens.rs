@@ -1,4 +1,4 @@
-use crate::routes::Pagination;
+use crate::routes::Filter;
 use actix_web::{web, HttpResponse};
 use chrono::{DateTime, Utc};
 use nft_models::ModelKind;
@@ -24,11 +24,11 @@ pub struct NftToken {
 }
 
 pub async fn nft_tokens(
-    pagination: web::Query<Pagination>,
+    filter: web::Query<Filter>,
     pool: web::Data<PgPool>,
 ) -> HttpResponse {
-    let limit = pagination.limit.unwrap_or(100);
-    let offset = pagination.offset.unwrap_or_default();
+    let limit = filter.limit.unwrap_or(100);
+    let offset = filter.offset.unwrap_or_default();
 
     let rows = sqlx::query_as!(
         NftToken,
