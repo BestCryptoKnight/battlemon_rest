@@ -10,7 +10,7 @@ use crate::routes::{Filter, Sale};
 pub async fn paid(
     filter: web::Query<Filter>,
     pool: web::Data<PgPool>,
-) -> actix_web::HttpResponse {
+) -> HttpResponse {
     let now = Utc::now();
     let days = filter.days.unwrap_or(1);
     let start_from = now - Duration::days(days);

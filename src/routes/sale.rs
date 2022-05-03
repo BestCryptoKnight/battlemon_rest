@@ -22,10 +22,7 @@ pub struct Sale {
     pub date: DateTime<Utc>,
 }
 
-pub async fn sale(
-    filter: web::Query<Filter>,
-    pool: web::Data<PgPool>,
-) -> actix_web::HttpResponse {
+pub async fn sale(filter: web::Query<Filter>, pool: web::Data<PgPool>) -> HttpResponse {
     let limit = filter.limit.unwrap_or(100);
     let offset = filter.offset.unwrap_or_default();
 
