@@ -1,4 +1,3 @@
-#![feature(once_cell)]
 use std::net::TcpListener;
 
 use sqlx::postgres::PgPoolOptions;
