@@ -1,4 +1,4 @@
-use crate::routes::Filter;
+use crate::filter::QueryFilter;
 use actix_web::{web, HttpResponse};
 use chrono::{DateTime, Utc};
 use nft_models::ModelKind;
@@ -23,13 +23,9 @@ pub struct NftToken {
     pub db_created_at: DateTime<Utc>,
 }
 
-pub async fn nft_tokens(
-    filter: web::Query<Filter>,
-    pool: web::Data<PgPool>,
-) -> HttpResponse {
+pub async fn nft_tokens(filter: web::Query<QueryFilter>, pool: web::Data<PgPool>) -> HttpResponse {
     let limit = filter.limit.unwrap_or(100);
     let offset = filter.offset.unwrap_or_default();
-
     let rows = sqlx::query_as!(
         NftToken,
         r#"
