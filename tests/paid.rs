@@ -1,3 +1,4 @@
+use battlemon_rest::routes::Paid;
 use fake::{Fake, Faker};
 
 use utils::spawn_app;
@@ -34,7 +35,9 @@ async fn paid() {
         .expect("Failed to execute request");
 
     assert!(response.status().is_success());
-    dbg!(response.json::<serde_json::Value>().await.unwrap());
-    // let actual_sales = response.json::<Vec<dummies::Sale>>().await.unwrap();
-    // assert_eq!(actual_sales.len(), 1);
+    let actual_sales = response
+        .json::<Paid>()
+        .await
+        .expect("Couldn't deserialize response");
+    assert_eq!(actual_sales.history.len(), 1);
 }
