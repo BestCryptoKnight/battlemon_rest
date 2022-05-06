@@ -1,3 +1,4 @@
+#![feature(once_cell)]
 use std::net::TcpListener;
 
 use sqlx::postgres::PgPoolOptions;
@@ -6,7 +7,7 @@ use battlemon_rest::{config, startup, telemetry};
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    let subscriber = telemetry::get_subscriber("indexer".into(), "info".into());
+    let subscriber = telemetry::get_subscriber("indexer".into(), "info".into(), std::io::stdout);
     telemetry::init_subscriber(subscriber);
     tracing::info!("Loading app config");
     let config = config::get_config().expect("Failed to read configuration");
