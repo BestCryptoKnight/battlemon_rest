@@ -11,6 +11,7 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<actix_web::dev::Server
     let pool = web::Data::new(pool);
     let server = actix_web::HttpServer::new(move || {
         actix_web::App::new()
+            .wrap(tracing_actix_web::TracingLogger::default())
             .route("/health_check", web::get().to(routes::health_check))
             .route("/sales", web::get().to(routes::sale))
             .route("/paid", web::get().to(routes::paid))
