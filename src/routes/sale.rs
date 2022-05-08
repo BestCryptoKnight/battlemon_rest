@@ -19,20 +19,20 @@ pub struct Sale {
 
 #[tracing::instrument(name = "Handle sales request", skip(pool), fields(request_id = %uuid::Uuid::new_v4()))]
 pub async fn sale(filter: web::Query<PaginationFilter>, pool: web::Data<PgPool>) -> HttpResponse {
-    let limit = filter.limit.unwrap_or(100);
-    let offset = filter.offset.unwrap_or(0);
+    let limit = filter.limit.unwrap_or(100) as i64;
+    let offset = filter.offset.unwrap_or(0) as i64;
 
-    let rows = query_sales(&pool, limit, offset).await;
+    let query_result = query_sales(limit, offset, &pool).await;
 
-    match rows {
-        Ok(rows) => HttpResponse::Ok().json(rows),
+    match query_result {
+        Ok(sales) => HttpResponse::Ok().json(sales),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }
 
 #[tracing::instrument(name = "Query sales from database", skip(pool))]
-pub async fn query_sales(pool: &PgPool, limit: i64, offset: i64) -> Result<Vec<Sale>, sqlx::Error> {
-    let sales = sqlx::query_as!(
+pub async fn query_sales(limit: i64, offset: i64, pool: &PgPool) -> Result<Vec<Sale>, sqlx::Error> {
+    let rows = sqlx::query_as!(
         Sale,
         r#"
         SELECT * FROM sales ORDER BY id LIMIT $1 OFFSET $2;
@@ -47,5 +47,5 @@ pub async fn query_sales(pool: &PgPool, limit: i64, offset: i64) -> Result<Vec<S
         e
     })?;
 
-    Ok(sales)
+    Ok(rows)
 }
