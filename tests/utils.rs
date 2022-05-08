@@ -1,29 +1,42 @@
+use once_cell::sync::Lazy;
 use std::net::TcpListener;
+
+static TRACING: Lazy<()> = Lazy::new(|| {
+    let default_filter_level = "info".to_string();
+    let subscriber_name = "test".to_string();
+    if std::env::var("TEST_LOG").is_ok() {
+        let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::stdout);
+        init_subscriber(subscriber);
+    } else {
+        let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::sink);
+        init_subscriber(subscriber);
+    }
+});
 
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 
 use battlemon_rest::config;
 use battlemon_rest::config::DatabaseSettings;
+use battlemon_rest::telemetry::{get_subscriber, init_subscriber};
 
 pub async fn spawn_app() -> TestApp {
+    Lazy::force(&TRACING);
     let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
     let port = listener.local_addr().unwrap().port();
     let address = format!("http://127.0.0.1:{}", port);
 
     let mut config = config::get_config().expect("Failed to read configuration");
-    config.database.database_name = Uuid::new_v4().to_string();
+    let database_name = Uuid::new_v4().to_string();
+    tracing::info!("new database name: {database_name}");
+    config.database.database_name = database_name;
     let db_pool = configure_db(&config.database).await;
 
     let server =
         battlemon_rest::startup::run(listener, db_pool.clone()).expect("Failed to bind address");
 
     let _ = tokio::spawn(server);
-    TestApp {
-        address,
-        db_pool,
-        db_name: config.database.database_name,
-    }
+    TestApp { address, db_pool }
 }
 
 pub async fn configure_db(config: &DatabaseSettings) -> PgPool {
@@ -50,5 +63,4 @@ pub async fn configure_db(config: &DatabaseSettings) -> PgPool {
 pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
-    pub db_name: String,
 }
