@@ -43,7 +43,7 @@ pub struct PaidStatistics {
     pub top_sale: Decimal,
 }
 
-#[tracing::instrument(name = "Get statistics and sales history for last days", skip(pool) )]
+#[tracing::instrument(name = "Get statistics and sales history for last days", skip(pool))]
 pub async fn paid(filter: web::Query<PaginationFilter>, pool: web::Data<PgPool>) -> HttpResponse {
     let now = Utc::now();
     let days = filter.days.unwrap_or(1);
