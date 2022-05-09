@@ -17,16 +17,16 @@ pub struct Sale {
     pub date: DateTime<Utc>,
 }
 
-#[tracing::instrument(name = "Handle sales request", skip(pool), fields(request_id = %uuid::Uuid::new_v4()))]
+#[tracing::instrument(name = "Handle sales request", skip(pool))]
 pub async fn sale(filter: web::Query<PaginationFilter>, pool: web::Data<PgPool>) -> HttpResponse {
-    let limit = filter.limit.unwrap_or(100) as i64;
-    let offset = filter.offset.unwrap_or(0) as i64;
+    let limit = filter.limit.unwrap_or(100);
+    let offset = filter.offset.unwrap_or(0);
 
     let query_result = query_sales(limit, offset, &pool).await;
 
     match query_result {
         Ok(sales) => HttpResponse::Ok().json(sales),
-        Err(_) => HttpResponse::InternalServerError().finish(),
+        Err(e) => HttpResponse::InternalServerError().finish(),
     }
 }
 
