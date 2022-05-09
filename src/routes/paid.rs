@@ -1,47 +1,86 @@
+use crate::filter::PaginationFilter;
 use actix_web::{web, HttpResponse};
-use chrono::{Duration, Utc};
+use chrono::{DateTime, Duration, Utc};
 use rust_decimal::prelude::Zero;
 use rust_decimal::Decimal;
-use serde_json::json;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use crate::routes::{Filter, Sale};
+use crate::routes::Sale;
 
-pub async fn paid(
-    filter: web::Query<Filter>,
-    pool: web::Data<PgPool>,
-) -> HttpResponse {
+#[derive(Serialize, Deserialize)]
+pub struct Paid {
+    pub history: Vec<Sale>,
+    pub statistics: PaidStatistics,
+}
+
+impl Paid {
+    fn new(
+        history: Vec<Sale>,
+        total_sale_volume: Decimal,
+        total_number_of_sales: usize,
+        top_sale: Decimal,
+    ) -> Self {
+        let statistics = PaidStatistics {
+            total_sale_volume,
+            total_number_of_sales,
+            top_sale,
+        };
+
+        Self {
+            history,
+            statistics,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct PaidStatistics {
+    #[serde(with = "rust_decimal::serde::str")]
+    pub total_sale_volume: Decimal,
+    pub total_number_of_sales: usize,
+    #[serde(with = "rust_decimal::serde::str")]
+    pub top_sale: Decimal,
+}
+
+#[tracing::instrument(name = "Get statistics and sales history for last days", skip(pool) )]
+pub async fn paid(filter: web::Query<PaginationFilter>, pool: web::Data<PgPool>) -> HttpResponse {
     let now = Utc::now();
     let days = filter.days.unwrap_or(1);
     let start_from = now - Duration::days(days);
-    let rows = sqlx::query_as!(
-        Sale,
-        r#"
-        SELECT * FROM sales WHERE date >= $1;
-        "#,
-        start_from,
-    )
-    .fetch_all(pool.get_ref())
-    .await;
+    let rows = query_sales(start_from, &pool).await;
 
     match rows {
         Ok(rows) => {
             let (top_sale, total_sale_volume) = calculate_report(&rows);
-            let json = json!({
-                 "history": rows,
-                 "statistics": {
-                     "total_sale_volume": total_sale_volume,
-                     "total_number_of_sales": rows.len(),
-                     "top_sale": top_sale,
-                 }
-            });
-            HttpResponse::Ok().json(json)
+            let total_number_of_sales = rows.len();
+            let paid_json = Paid::new(rows, total_sale_volume, total_number_of_sales, top_sale);
+            HttpResponse::Ok().json(paid_json)
         }
         Err(e) => {
             println!("Failed to execute query: {:?}", e);
             HttpResponse::InternalServerError().finish()
         }
     }
+}
+
+#[tracing::instrument(name = "Query sales for last days from database", skip(pool))]
+async fn query_sales(start_from: DateTime<Utc>, pool: &PgPool) -> Result<Vec<Sale>, sqlx::Error> {
+    let sales = sqlx::query_as!(
+        Sale,
+        r#"
+        SELECT * FROM sales WHERE date >= $1;
+        "#,
+        start_from,
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to execute query: {:?}", e);
+        e
+    })?;
+
+    Ok(sales)
 }
 
 fn calculate_report(rows: &[Sale]) -> (Decimal, Decimal) {
