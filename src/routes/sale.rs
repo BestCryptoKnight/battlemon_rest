@@ -1,10 +1,11 @@
 use super::PaginationQuery;
 use crate::domain::{SaleFilter, SaleLimit, SaleOffset};
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpResponse, ResponseError};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use std::fmt::Formatter;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize)]
@@ -27,6 +28,20 @@ impl TryFrom<PaginationQuery> for SaleFilter {
         Ok(Self { limit, offset })
     }
 }
+
+#[derive(Debug)]
+pub struct QuerySalesError(sqlx::Error);
+
+impl std::fmt::Display for QuerySalesError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "A database error was encountered while trying to get sales"
+        )
+    }
+}
+
+impl ResponseError for QuerySalesError {}
 
 #[tracing::instrument(name = "Handle sales request", skip(pool))]
 pub async fn sale(
