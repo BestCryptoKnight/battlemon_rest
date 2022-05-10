@@ -1,12 +1,14 @@
-use super::PaginationQuery;
-use crate::domain::{SaleFilter, SaleLimit, SaleOffset};
-use actix_web::{web, HttpResponse, ResponseError};
+use actix_web::{web, HttpResponse};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use std::fmt::Formatter;
 use uuid::Uuid;
+
+use crate::domain::{SaleFilter, SaleLimit, SaleOffset};
+use crate::error::QuerySalesError;
+
+use super::PaginationQuery;
 
 #[derive(Serialize, Deserialize)]
 pub struct Sale {
@@ -29,39 +31,22 @@ impl TryFrom<PaginationQuery> for SaleFilter {
     }
 }
 
-#[derive(Debug)]
-pub struct QuerySalesError(sqlx::Error);
-
-impl std::fmt::Display for QuerySalesError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "A database error was encountered while trying to get sales"
-        )
-    }
-}
-
-impl ResponseError for QuerySalesError {}
-
 #[tracing::instrument(name = "Handle sales request", skip(pool))]
 pub async fn sale(
     web::Query(filter): web::Query<PaginationQuery>,
     pool: web::Data<PgPool>,
-) -> HttpResponse {
+) -> Result<HttpResponse, actix_web::Error> {
     let filter = match filter.try_into() {
         Ok(f) => f,
-        Err(_) => return HttpResponse::InternalServerError().finish(),
+        Err(_) => return Ok(HttpResponse::InternalServerError().finish()),
     };
 
-    let query_result = query_sales(filter, &pool).await;
-    match query_result {
-        Ok(sales) => HttpResponse::Ok().json(sales),
-        Err(_) => HttpResponse::InternalServerError().finish(),
-    }
+    let sales = query_sales(filter, &pool).await?;
+    Ok(HttpResponse::Ok().json(sales))
 }
 
 #[tracing::instrument(name = "Query sales from database", skip(pool))]
-pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>, sqlx::Error> {
+pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>, QuerySalesError> {
     let rows = sqlx::query_as!(
         Sale,
         r#"
@@ -75,7 +60,7 @@ pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>,
     .await
     .map_err(|e| {
         tracing::error!("Failed to execute query: {:?}", e);
-        e
+        QuerySalesError(e)
     })?;
 
     Ok(rows)
