@@ -27,6 +27,7 @@ tracing-bunyan-formatter = "0.3.2"
 tracing-log = "0.1.2"
 tracing-actix-web = "0.5.1"
 nft_models = { git = "https://github.com/battlemon-project/contracts" }
+thiserror = "1.0.31"
 
 [dev-dependencies]
 reqwest = { version = "0.11.9", features = ["json"] }
