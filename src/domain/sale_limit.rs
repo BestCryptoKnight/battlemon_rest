@@ -1,7 +1,11 @@
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct SaleLimit(i64);
 
-const DEFAULT_LIMIT: i64 = 100;
+impl Default for SaleLimit {
+    fn default() -> Self {
+        Self(100)
+    }
+}
 
 impl SaleLimit {
     pub fn parse(limit: Option<i64>) -> Result<SaleLimit, String> {
@@ -9,7 +13,7 @@ impl SaleLimit {
             Some(n) if n.is_negative() => {
                 Err(format!("The limit value is {n:?}. It must be positive"))
             }
-            None => Ok(Self(DEFAULT_LIMIT)),
+            None => Ok(Self::default()),
             Some(n) => Ok(Self(n)),
         }
     }
@@ -34,6 +38,6 @@ mod tests {
     #[test]
     fn none_limit_equals_default() {
         let limit = None;
-        assert_ok_eq!(SaleLimit::parse(limit), SaleLimit(DEFAULT_LIMIT));
+        assert_ok_eq!(SaleLimit::parse(limit), SaleLimit::default());
     }
 }
