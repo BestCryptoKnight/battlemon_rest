@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::domain::{SaleFilter, SaleLimit, SaleOffset};
+use crate::domain::{SaleDays, SaleFilter, SaleLimit, SaleOffset};
 use crate::errors::SaleError;
 
 use super::PaginationQuery;
@@ -28,6 +28,8 @@ impl TryFrom<PaginationQuery> for SaleFilter {
     fn try_from(value: PaginationQuery) -> Result<Self, Self::Error> {
         let limit = SaleLimit::parse(value.limit)?;
         let offset = SaleOffset::parse(value.offset)?;
+        SaleDays::parse(value.days)?;
+
         Ok(Self { limit, offset })
     }
 }
@@ -60,4 +62,14 @@ pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>,
     .await?;
 
     Ok(rows)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn from_pagination_query_into_sale_filter() {
+        todo!()
+    }
 }
