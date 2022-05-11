@@ -1,11 +1,11 @@
+use std::net::TcpListener;
+
 use actix_web::{error, web, HttpResponse};
 use sqlx::PgPool;
-use std::net::TcpListener;
-use tracing::instrument;
 
 use crate::routes;
 
-#[instrument("Running application", skip(listener, pool))]
+#[tracing::instrument(name = "Running application", skip(listener, pool))]
 pub fn run(listener: TcpListener, pool: PgPool) -> Result<actix_web::dev::Server, std::io::Error> {
     let pool = web::Data::new(pool);
     let server = actix_web::HttpServer::new(move || {
