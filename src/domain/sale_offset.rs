@@ -1,3 +1,4 @@
+#[derive(Debug, Copy, Clone)]
 pub struct SaleOffset(i64);
 
 impl SaleOffset {
@@ -7,5 +8,9 @@ impl SaleOffset {
             None => Ok(Self(0)),
             Some(n) => Ok(Self(n)),
         }
+    }
+
+    pub fn into_inner(self) -> i64 {
+        self.0
     }
 }

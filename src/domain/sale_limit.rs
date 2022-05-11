@@ -1,3 +1,4 @@
+#[derive(Debug, Copy, Clone)]
 pub struct SaleLimit(i64);
 
 const DEFAULT_LIMIT: i64 = 100;
@@ -9,5 +10,9 @@ impl SaleLimit {
             Some(0) | None => Ok(Self(DEFAULT_LIMIT)),
             Some(n) => Ok(Self(n)),
         }
+    }
+
+    pub fn into_inner(self) -> i64 {
+        self.0
     }
 }
