@@ -39,7 +39,7 @@ async fn sale() {
 }
 
 #[tokio::test]
-async fn sales_valid_when_in_proper_type_or_omitted_and_replaced_to_default_values_by_validators() {
+async fn sales_returns_200_for_different_valid_queries() {
     let app = spawn_app().await;
     let sales = fake::vec![dummies::Sale; 200];
     for sale in sales {
@@ -95,3 +95,24 @@ async fn sales_valid_when_in_proper_type_or_omitted_and_replaced_to_default_valu
         );
     }
 }
+
+#[tokio::test]
+async fn sale_fails_if_there_is_a_fatal_database_error() {
+    let app = spawn_app().await;
+    let query = "/sales?offset=2&limit=10";
+    sqlx::query!("ALTER TABLE sales DROP COLUMN price;",)
+        .execute(&app.db_pool)
+        .await
+        .unwrap();
+
+    let client = reqwest::Client::new();
+    let response = client
+        .get(&format!("{}{}", app.address, query))
+        .send()
+        .await
+        .expect("Couldn't get response");
+    assert_eq!(response.status().as_u16(), 500);
+}
+
+// #[tokio::test]
+// async fn sale_returns_a_400_when_query
