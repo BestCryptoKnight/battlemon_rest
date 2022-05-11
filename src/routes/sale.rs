@@ -1,4 +1,5 @@
 use actix_web::{web, HttpResponse};
+use anyhow::Context;
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -6,7 +7,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::domain::{SaleFilter, SaleLimit, SaleOffset};
-use crate::error::QuerySalesError;
+use crate::errors::SaleError;
 
 use super::PaginationQuery;
 
@@ -31,22 +32,21 @@ impl TryFrom<PaginationQuery> for SaleFilter {
     }
 }
 
-#[tracing::instrument(name = "Handle sales request", skip(pool))]
+#[tracing::instrument(name = "Handle sales request", skip(filter, pool))]
 pub async fn sale(
     web::Query(filter): web::Query<PaginationQuery>,
     pool: web::Data<PgPool>,
-) -> Result<HttpResponse, actix_web::Error> {
-    let filter = match filter.try_into() {
-        Ok(f) => f,
-        Err(_) => return Ok(HttpResponse::InternalServerError().finish()),
-    };
+) -> Result<HttpResponse, SaleError> {
+    let filter = filter.try_into().map_err(SaleError::ValidationError)?;
+    let sales = query_sales(filter, &pool)
+        .await
+        .context("Failed to get the sale's data from the database.")?;
 
-    let sales = query_sales(filter, &pool).await?;
     Ok(HttpResponse::Ok().json(sales))
 }
 
-#[tracing::instrument(name = "Query sales from database", skip(pool))]
-pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>, QuerySalesError> {
+#[tracing::instrument(name = "Query sales from database", skip(filter, pool))]
+pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>, anyhow::Error> {
     let rows = sqlx::query_as!(
         Sale,
         r#"
@@ -57,11 +57,7 @@ pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>,
         filter.offset()
     )
     .fetch_all(pool)
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        QuerySalesError(e)
-    })?;
+    .await?;
 
     Ok(rows)
 }
