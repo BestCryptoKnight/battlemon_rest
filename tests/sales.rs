@@ -39,15 +39,15 @@ async fn sale() {
 }
 
 #[tokio::test]
-async fn sales() {
+async fn sales_valid_when_in_proper_type_or_omitted_and_replaced_to_default_values_by_validators() {
     let app = spawn_app().await;
     let sales = fake::vec![dummies::Sale; 200];
     for sale in sales {
         sqlx::query!(
             r#"
-        INSERT INTO sales (id, prev_owner, curr_owner, token_id, price, date)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        "#,
+            INSERT INTO sales (id, prev_owner, curr_owner, token_id, price, date)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            "#,
             sale.id,
             sale.prev_owner,
             sale.curr_owner,
@@ -64,24 +64,34 @@ async fn sales() {
     let queries_and_expectations = [
         ("/sales", 100),
         ("/sales?offset=2", 100),
+        ("/sales?offset=199", 1),
+        ("/sales?offset=200", 0),
+        ("/sales?offset=150", 50),
         ("/sales?limit=50", 50),
-        ("/sales?limit=198", 198),
+        ("/sales?limit=250", 200),
+        ("/sales?limit=0", 0),
+        ("/sales?offset=0&limit=0", 0),
         ("/sales?offset=10&limit=25", 25),
+        ("/sales?offset=200&limit=10", 0),
+        ("/sales?offset=199&limit=11", 1),
     ];
-    for (query, expectation) in queries_and_expectations {
+
+    for (idx, (query, expectation)) in queries_and_expectations.iter().enumerate() {
+        let url = format!("{}{}", app.address, query);
         let response = client
-            .get(&format!("{}{}", app.address, query))
+            .get(&url)
             .send()
             .await
-            .expect("Failed to execute request");
+            .unwrap_or_else(|_| panic!("Failed to execute request: {url}"));
+        assert_eq!(response.status().as_u16(), 200);
 
-        assert!(response.status().is_success());
         let actual_sales = response.json::<Vec<dummies::Sale>>().await.unwrap();
         assert_eq!(
             actual_sales.len(),
-            expectation,
-            "length of sales not the same of query {}",
-            query
+            *expectation,
+            "length of sales not the same. query is: {} with index: {}",
+            query,
+            idx
         );
     }
 }
