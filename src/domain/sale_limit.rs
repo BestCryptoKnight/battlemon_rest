@@ -21,10 +21,19 @@ impl SaleLimit {
 
 #[cfg(test)]
 mod tests {
+    use claim::{assert_err, assert_ok, assert_ok_eq};
+
     use super::*;
 
     #[test]
-    fn sales_limit_parsing_works() {
-        todo!()
+    fn negative_limit_is_rejected() {
+        let limit = Some(-10);
+        assert_err!(SaleLimit::parse(limit));
+    }
+
+    #[test]
+    fn none_limit_equals_default() {
+        let limit = None;
+        assert_ok_eq!(SaleLimit::parse(limit), DEFAULT_LIMIT);
     }
 }
