@@ -39,7 +39,7 @@ async fn sale() {
 }
 
 #[tokio::test]
-async fn sales_returns_200_for_different_valid_queries() {
+async fn sales_success_and_returns_200_for_different_valid_queries() {
     let app = spawn_app().await;
     let sales = fake::vec![dummies::Sale; 200];
     for sale in sales {
@@ -97,7 +97,7 @@ async fn sales_returns_200_for_different_valid_queries() {
 }
 
 #[tokio::test]
-async fn sale_fails_if_there_is_a_fatal_database_error() {
+async fn sale_fails_and_return_500_if_there_is_a_fatal_database_error() {
     let app = spawn_app().await;
     let query = "/sales?offset=2&limit=10";
     sqlx::query!("ALTER TABLE sales DROP COLUMN price;",)
@@ -112,6 +112,45 @@ async fn sale_fails_if_there_is_a_fatal_database_error() {
         .await
         .expect("Couldn't get response");
     assert_eq!(response.status().as_u16(), 500);
+}
+
+#[tokio::test]
+async fn sale_fails_and_return_400_when_invalid_queries() {
+    let app = spawn_app().await;
+    let client = reqwest::Client::new();
+
+    let invalid_queries = [
+        "limit",
+        "limit=",
+        "limit=-1",
+        r#"limit="abc""#,
+        r#"limit="10""#,
+        "offset",
+        "offset=",
+        "offset=-1",
+        r#"offset="abc""#,
+        r#"offset="10""#,
+        "days",
+        "days=",
+        "days=-1",
+        r#"days="abc""#,
+        r#"days="10""#,
+    ];
+
+    for invalid_query in invalid_queries {
+        let url = format!("{}/sales?{}", app.address, invalid_query);
+        let response = client
+            .get(url)
+            .send()
+            .await
+            .expect("Failed to get response");
+        let actual_status = response.status().as_u16();
+        assert_eq!(
+            actual_status, 400,
+            "Actual: {}. Expected: 400. Wrong query is: {}",
+            actual_status, invalid_query
+        )
+    }
 }
 
 // #[tokio::test]
