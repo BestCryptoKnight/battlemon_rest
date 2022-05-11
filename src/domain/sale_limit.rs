@@ -1,4 +1,4 @@
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct SaleLimit(i64);
 
 const DEFAULT_LIMIT: i64 = 100;
@@ -21,7 +21,7 @@ impl SaleLimit {
 
 #[cfg(test)]
 mod tests {
-    use claim::{assert_err, assert_ok, assert_ok_eq};
+    use claim::{assert_err, assert_ok_eq};
 
     use super::*;
 
@@ -34,6 +34,6 @@ mod tests {
     #[test]
     fn none_limit_equals_default() {
         let limit = None;
-        assert_ok_eq!(SaleLimit::parse(limit), DEFAULT_LIMIT);
+        assert_ok_eq!(SaleLimit::parse(limit), SaleLimit(DEFAULT_LIMIT));
     }
 }
