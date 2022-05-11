@@ -16,3 +16,13 @@ impl SaleLimit {
         self.0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sales_limit_parsing_works() {
+        todo!()
+    }
+}
