@@ -1,5 +1,56 @@
 {
   "db": "PostgreSQL",
+  "1b23552b5a63b24d6476c204fb4560bab04642bf1ac7e0054f42f080253a6703": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "prev_owner",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "curr_owner",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "token_id",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "price",
+          "ordinal": 4,
+          "type_info": "Numeric"
+        },
+        {
+          "name": "date",
+          "ordinal": 5,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales ORDER BY id LIMIT $1 OFFSET $2;\n        "
+  },
   "24d601172999301f910dd1020374101cde350a2724ab33a041ea6f01246dd582": {
     "describe": {
       "columns": [
@@ -87,7 +138,7 @@
     },
     "query": "\n        SELECT id, owner_id, token_id, media, model as \"model: Json<ModelKind>\", db_created_at, copies, description, expires_at, issued_at, title, media_hash\n        FROM nft_tokens ORDER BY id LIMIT $1 OFFSET $2;\n        "
   },
-  "33fdd2f6a6ac0e3378574ac7de3b9416975938bd4db909b6a9742ded2aa5a13d": {
+  "bee5fc119ded93fec96c14264ea2cdfec365f35520641f9a76d052c76cd64bbf": {
     "describe": {
       "columns": [
         {
@@ -135,57 +186,6 @@
         ]
       }
     },
-    "query": "\n        SELECT * FROM sales WHERE date >= $1;\n        "
-  },
-  "da308b241da2abf5960e5c322a9ff70213d4fcda05443a54adf1d5ff8d7d3223": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "prev_owner",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "curr_owner",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "token_id",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "price",
-          "ordinal": 4,
-          "type_info": "Numeric"
-        },
-        {
-          "name": "date",
-          "ordinal": 5,
-          "type_info": "Timestamptz"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Int8",
-          "Int8"
-        ]
-      }
-    },
-    "query": "\n        SELECT * FROM sales ORDER BY id LIMIT $1 OFFSET $2;\n        "
+    "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales WHERE date >= $1;\n        "
   }
 }
