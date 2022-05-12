@@ -29,6 +29,7 @@ tracing-actix-web = "0.5.1"
 nft_models = { git = "https://github.com/battlemon-project/contracts" }
 thiserror = "1.0.31"
 anyhow = "1.0.57"
+quickcheck = "1.0.3"
 
 [dev-dependencies]
 reqwest = { version = "0.11.9", features = ["json"] }
