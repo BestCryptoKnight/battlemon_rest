@@ -97,6 +97,8 @@ async fn sale_fails_and_return_500_if_there_is_a_fatal_database_error() {
         500,
         "The API didn't return 500 Internal Server Error"
     );
+
+    helpers::assert_json_error(response).await
 }
 
 #[tokio::test]
@@ -128,6 +130,7 @@ async fn sale_fails_and_return_400_when_invalid_queries() {
             actual_status, 400,
             "Actual: {}. Expected: 400. Wrong query is: {}",
             actual_status, invalid_query
-        )
+        );
+        helpers::assert_json_error(response).await;
     }
 }
