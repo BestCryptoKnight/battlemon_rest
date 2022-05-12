@@ -1,4 +1,5 @@
 use battlemon_rest::routes::Paid;
+use chrono::Utc;
 use fake::{Fake, Faker};
 
 use utils::spawn_app;
@@ -9,8 +10,8 @@ mod utils;
 #[tokio::test]
 async fn paid() {
     let app = spawn_app().await;
-    let expected_sale: dummies::Sale = Faker.fake();
-
+    let mut expected_sale: dummies::Sale = Faker.fake();
+    expected_sale.date = Utc::now();
     sqlx::query!(
         r#"
         INSERT INTO sales (id, prev_owner, curr_owner, token_id, price, date)
@@ -33,7 +34,7 @@ async fn paid() {
         .send()
         .await
         .expect("Failed to execute request");
-
+    //todo: this test sometimes is failed. may be because something wrong with calculation
     assert!(response.status().is_success());
     let actual_sales = response
         .json::<Paid>()

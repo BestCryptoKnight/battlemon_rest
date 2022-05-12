@@ -1,4 +1,4 @@
-use crate::filter::PaginationFilter;
+use super::PaginationQuery;
 use actix_web::{web, HttpResponse};
 use chrono::{DateTime, Duration, Utc};
 use rust_decimal::prelude::Zero;
@@ -44,7 +44,7 @@ pub struct PaidStatistics {
 }
 
 #[tracing::instrument(name = "Get statistics and sales history for last days", skip(pool))]
-pub async fn paid(filter: web::Query<PaginationFilter>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn paid(filter: web::Query<PaginationQuery>, pool: web::Data<PgPool>) -> HttpResponse {
     let now = Utc::now();
     let days = filter.days.unwrap_or(1);
     let start_from = now - Duration::days(days);
@@ -69,7 +69,8 @@ async fn query_sales(start_from: DateTime<Utc>, pool: &PgPool) -> Result<Vec<Sal
     let sales = sqlx::query_as!(
         Sale,
         r#"
-        SELECT * FROM sales WHERE date >= $1;
+        SELECT id, prev_owner, curr_owner, token_id, price, date
+        FROM sales WHERE date >= $1;
         "#,
         start_from,
     )

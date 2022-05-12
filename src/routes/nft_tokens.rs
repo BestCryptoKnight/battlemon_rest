@@ -1,4 +1,4 @@
-use crate::filter::PaginationFilter;
+use super::PaginationQuery;
 use actix_web::{web, HttpResponse};
 use chrono::{DateTime, Utc};
 use nft_models::ModelKind;
@@ -24,7 +24,7 @@ pub struct NftToken {
 }
 
 pub async fn nft_tokens(
-    filter: web::Query<PaginationFilter>,
+    filter: web::Query<PaginationQuery>,
     pool: web::Data<PgPool>,
 ) -> HttpResponse {
     let limit = filter.limit.unwrap_or(100);

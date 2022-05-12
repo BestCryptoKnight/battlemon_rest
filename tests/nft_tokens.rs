@@ -1,5 +1,4 @@
 use battlemon_rest::routes::NftToken;
-use fake::{Fake, Faker};
 use nft_models::lemon::{Cap, Cloth, Exo, Eyes, Head, Teeth};
 use nft_models::{Lemon, ModelKind};
 use sqlx::types::{chrono::Utc, Json, Uuid};
@@ -37,7 +36,6 @@ async fn nft_tokens() {
     .execute(&app.db_pool)
     .await
     .expect("Failed to execute query");
-    println!("db: {}", app.db_name);
 
     let token = sqlx::query_as!(
         NftToken,
@@ -50,11 +48,10 @@ async fn nft_tokens() {
     .await
     .unwrap();
 
-    dbg!(token.model.as_ref());
-    // let client = reqwest::Client::new();
-    // let response = client
-    //     .get(&format!("{}/nft_tokens", app.address))
-    //     .send()
-    //     .await
-    //     .expect("Failed to execute request");
+    let client = reqwest::Client::new();
+    let response = client
+        .get(&format!("{}/nft_tokens", app.address))
+        .send()
+        .await
+        .expect("Failed to execute request");
 }
