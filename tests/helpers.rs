@@ -30,7 +30,7 @@ impl TestApp {
             .get(&format!("{}/sales?{query}", self.address))
             .send()
             .await
-            .expect("Failed to execute request")
+            .unwrap_or_else(|_| panic!("Failed to execute request with query: {query}"))
     }
 }
 
