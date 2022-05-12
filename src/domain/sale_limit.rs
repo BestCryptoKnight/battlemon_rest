@@ -25,7 +25,27 @@ impl SaleLimit {
 
 #[cfg(test)]
 mod tests {
+    use fake::Fake;
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+
     use super::*;
+
+    #[derive(Debug, Clone)]
+    struct ValidLimitFixture(pub Option<i64>);
+
+    impl quickcheck::Arbitrary for ValidLimitFixture {
+        fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+            let mut rng = StdRng::seed_from_u64(u64::arbitrary(g));
+            let limit = (0..10000).fake_with_rng(&mut rng);
+            Self(Some(limit))
+        }
+    }
+
+    #[quickcheck_macros::quickcheck]
+    fn valid_limit_are_parsed_successfully(valid_limit: ValidLimitFixture) -> bool {
+        SaleLimit::parse(valid_limit.0).is_ok()
+    }
 
     #[test]
     fn negative_limit_is_rejected() {
