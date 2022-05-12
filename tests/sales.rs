@@ -152,6 +152,3 @@ async fn sale_fails_and_return_400_when_invalid_queries() {
         )
     }
 }
-
-// #[tokio::test]
-// async fn sale_returns_a_400_when_query
