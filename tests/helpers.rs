@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use battlemon_rest::config;
 use battlemon_rest::config::DatabaseSettings;
+use battlemon_rest::errors::JsonError;
 use battlemon_rest::startup::{get_connection_pool, Application};
 use battlemon_rest::telemetry::{get_subscriber, init_subscriber};
 
@@ -75,4 +76,13 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("Failed to migrate the database");
 
     conn_pool
+}
+
+pub async fn assert_json_error(response: reqwest::Response) {
+    let result = response.json::<JsonError>().await;
+    assert!(
+        result.is_ok(),
+        "The response doesn't contain json error scheme: actual response is {:?}",
+        result
+    )
 }
