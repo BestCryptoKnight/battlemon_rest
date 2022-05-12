@@ -1,15 +1,11 @@
-use std::net::TcpListener;
-
-use actix_web::dev::Server;
 use once_cell::sync::Lazy;
-use sqlx::postgres::PgPoolOptions;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 
-use battlemon_rest::config::{DatabaseSettings, Settings};
+use battlemon_rest::config;
+use battlemon_rest::config::DatabaseSettings;
 use battlemon_rest::startup::{get_connection_pool, Application};
 use battlemon_rest::telemetry::{get_subscriber, init_subscriber};
-use battlemon_rest::{config, startup};
 
 static TRACING: Lazy<()> = Lazy::new(|| {
     let default_filter_level = "info".to_string();
@@ -29,7 +25,7 @@ pub struct TestApp {
 }
 
 impl TestApp {
-    pub async fn get_sales(&self, query: String) -> reqwest::Response {
+    pub async fn get_sales(&self, query: &str) -> reqwest::Response {
         reqwest::Client::new()
             .get(&format!("{}/sales?{query}", self.address))
             .send()
@@ -41,13 +37,13 @@ impl TestApp {
 pub async fn spawn_app() -> TestApp {
     Lazy::force(&TRACING);
 
-    let mut config = {
+    let config = {
         let mut cfg = config::get_config().expect("Failed to read configuration");
         cfg.database.database_name = Uuid::new_v4().to_string();
         cfg.application.port = 0;
         cfg
     };
-
+    configure_database(&config.database).await;
     let application = Application::build(config.clone())
         .await
         .expect("Failed to build application");
@@ -60,7 +56,7 @@ pub async fn spawn_app() -> TestApp {
     }
 }
 
-pub async fn configure_db(config: &DatabaseSettings) -> PgPool {
+pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     let mut conn = PgConnection::connect_with(&config.without_db())
         .await
         .expect("Failed to connect to Postgres");
