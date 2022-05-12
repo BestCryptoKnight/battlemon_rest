@@ -63,13 +63,3 @@ pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>,
 
     Ok(rows)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn from_pagination_query_into_sale_filter() {
-        todo!()
-    }
-}
