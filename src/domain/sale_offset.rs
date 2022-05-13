@@ -1,18 +1,20 @@
+use crate::domain::{New, ParseToPositiveInt};
+
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct SaleOffset(i64);
 
-impl SaleOffset {
-    pub fn parse(offset: Option<i64>) -> Result<SaleOffset, String> {
-        match offset {
-            Some(n) if n.is_negative() => {
-                Err(format!("The offset value is {n}. It must be positive."))
-            }
-            None => Ok(Self::default()),
-            Some(n) => Ok(Self(n)),
-        }
+impl New for SaleOffset {
+    fn new(offset: i64) -> Self {
+        Self(offset)
     }
+}
 
-    pub fn into_inner(self) -> i64 {
+impl ParseToPositiveInt for SaleOffset {
+    const ERROR: &'static str = "The offset value must be positive.";
+}
+
+impl SaleOffset {
+    pub fn get(self) -> i64 {
         self.0
     }
 }
