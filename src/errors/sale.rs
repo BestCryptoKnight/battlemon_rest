@@ -2,9 +2,8 @@ use std::fmt::{Debug, Formatter, Result};
 
 use actix_web::http::{header, StatusCode};
 use actix_web::{HttpResponse, ResponseError};
-use serde::{Deserialize, Serialize};
 
-use crate::errors::error_chain_fmt;
+use crate::errors::{error_chain_fmt, JsonError};
 
 #[derive(thiserror::Error)]
 pub enum SaleError {
@@ -12,17 +11,6 @@ pub enum SaleError {
     ValidationError(String),
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct JsonError {
-    error: String,
-}
-
-impl JsonError {
-    pub fn new(error: String) -> Self {
-        Self { error }
-    }
 }
 
 impl Debug for SaleError {

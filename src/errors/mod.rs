@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::fmt::{self, Formatter};
 
+use serde::{Deserialize, Serialize};
+
 pub use sale::*;
 
 mod sale;
@@ -14,4 +16,15 @@ fn error_chain_fmt(error: &impl Error, f: &mut Formatter<'_>) -> fmt::Result {
     }
 
     Ok(())
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct JsonError {
+    error: String,
+}
+
+impl JsonError {
+    pub fn new(error: String) -> Self {
+        Self { error }
+    }
 }
