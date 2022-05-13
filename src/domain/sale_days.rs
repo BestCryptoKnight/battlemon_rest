@@ -1,12 +1,19 @@
-#[derive(Debug, Copy, Clone)]
+use crate::domain::{New, ParseToPositiveInt};
+
+#[derive(Debug, Copy, Clone, Default)]
 pub struct SaleDays;
 
-impl SaleDays {
-    #[allow(unused_variables)]
-    pub fn parse(days: Option<i64>) -> Result<(), String> {
+impl New for SaleDays {
+    fn new(_: i64) -> Self {
+        unreachable!("days prohibit for sales filter")
+    }
+}
+
+impl ParseToPositiveInt for SaleDays {
+    fn parse(days: Option<i64>) -> Result<Self, &'static str> {
         match days {
-            None => Ok(()),
-            Some(_) => Err("query 'days' is prohibited for the `sales` route".into()),
+            None => Ok(Self),
+            Some(_) => Err("query 'days' is prohibited for the `sales` route"),
         }
     }
 }
