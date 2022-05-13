@@ -57,4 +57,15 @@ mod tests {
             actual
         );
     }
+
+    #[test]
+    fn default_offset_is_100() {
+        let actual = SaleOffset::default();
+        assert_eq!(
+            actual,
+            SaleOffset::new(0),
+            "The actual `SaleOffset` doesn't contain `0i64`, actual value is {:?}",
+            actual
+        );
+    }
 }

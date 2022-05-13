@@ -27,10 +27,6 @@ impl ParseToPositiveInt for SaleLimit {
 
 #[cfg(test)]
 mod tests {
-    use fake::Fake;
-    use rand::rngs::StdRng;
-    use rand::SeedableRng;
-
     use crate::domain::helpers::PositiveIntegersFixture;
 
     use super::*;
@@ -64,6 +60,17 @@ mod tests {
             actual,
             Ok(SaleLimit::default()),
             "The actual `SaleLimit` doesn't equal default value, actual value is {:?}",
+            actual
+        );
+    }
+
+    #[test]
+    fn default_limit_is_100() {
+        let actual = SaleLimit::default();
+        assert_eq!(
+            actual,
+            SaleLimit::new(100),
+            "The actual `SaleLimit` doesn't contain `100i64`, actual value is {:?}",
             actual
         );
     }
