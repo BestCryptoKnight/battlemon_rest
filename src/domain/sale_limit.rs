@@ -1,3 +1,5 @@
+pub use crate::domain::{New, ParseToPositiveInt};
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct SaleLimit(i64);
 
@@ -8,19 +10,19 @@ impl Default for SaleLimit {
 }
 
 impl SaleLimit {
-    pub fn parse(limit: Option<i64>) -> Result<SaleLimit, String> {
-        match limit {
-            Some(n) if n.is_negative() => {
-                Err(format!("The limit value is {n:?}. It must be positive"))
-            }
-            None => Ok(Self::default()),
-            Some(n) => Ok(Self(n)),
-        }
-    }
-
-    pub fn into_inner(self) -> i64 {
+    pub fn get(self) -> i64 {
         self.0
     }
+}
+
+impl New for SaleLimit {
+    fn new(value: i64) -> Self {
+        Self(value)
+    }
+}
+
+impl ParseToPositiveInt for SaleLimit {
+    const ERROR: &'static str = "The limit value must be positive.";
 }
 
 #[cfg(test)]
