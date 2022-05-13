@@ -25,10 +25,10 @@ pub struct Sale {
 impl TryFrom<PaginationQuery> for SaleFilter {
     type Error = String;
 
-    fn try_from(value: PaginationQuery) -> Result<Self, Self::Error> {
-        let limit = SaleLimit::parse(value.limit)?;
-        let offset = SaleOffset::parse(value.offset)?;
-        SaleDays::parse(value.days)?;
+    fn try_from(query: PaginationQuery) -> Result<Self, Self::Error> {
+        let limit = SaleLimit::parse(query.limit)?;
+        let offset = SaleOffset::parse(query.offset)?;
+        SaleDays::parse(query.days)?;
 
         Ok(Self { limit, offset })
     }
