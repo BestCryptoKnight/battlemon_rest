@@ -21,25 +21,12 @@ impl SaleOffset {
 
 #[cfg(test)]
 mod tests {
-    use fake::Fake;
-    use rand::rngs::StdRng;
-    use rand::SeedableRng;
+    use crate::domain::helpers::PositiveIntegersFixture;
 
     use super::*;
 
-    #[derive(Debug, Clone)]
-    struct ValidOffsetFixture(pub Option<i64>);
-
-    impl quickcheck::Arbitrary for ValidOffsetFixture {
-        fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-            let mut rng = StdRng::seed_from_u64(u64::arbitrary(g));
-            let offset = (0..10000).fake_with_rng(&mut rng);
-            Self(Some(offset))
-        }
-    }
-
     #[quickcheck_macros::quickcheck]
-    fn valid_offset_are_parsed_successfully(valid_offset: ValidOffsetFixture) -> bool {
+    fn valid_offset_are_parsed_successfully(valid_offset: PositiveIntegersFixture) -> bool {
         SaleOffset::parse(valid_offset.0).is_ok()
     }
 

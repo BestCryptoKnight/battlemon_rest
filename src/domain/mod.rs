@@ -30,3 +30,21 @@ where
         }
     }
 }
+
+#[cfg(test)]
+pub mod helpers {
+    use fake::Fake;
+    use rand::prelude::StdRng;
+    use rand::SeedableRng;
+
+    #[derive(Debug, Clone)]
+    pub struct PositiveIntegersFixture(pub Option<i64>);
+
+    impl quickcheck::Arbitrary for PositiveIntegersFixture {
+        fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+            let mut rng = StdRng::seed_from_u64(u64::arbitrary(g));
+            let limit = (0..10000).fake_with_rng(&mut rng);
+            Self(Some(limit))
+        }
+    }
+}
