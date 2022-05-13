@@ -9,10 +9,10 @@ pub struct SaleFilter {
 
 impl SaleFilter {
     pub fn limit(&self) -> i64 {
-        self.limit.into_inner()
+        self.limit.get()
     }
 
     pub fn offset(&self) -> i64 {
-        self.offset.into_inner()
+        self.offset.get()
     }
 }
