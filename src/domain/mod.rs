@@ -1,4 +1,5 @@
 pub use paid::*;
+pub use paid_days::*;
 pub use paid_limit::*;
 pub use paid_offset::*;
 pub use sale::*;
@@ -7,6 +8,7 @@ pub use sale_limit::*;
 pub use sale_offset::*;
 
 mod paid;
+mod paid_days;
 mod paid_limit;
 mod paid_offset;
 mod sale;
