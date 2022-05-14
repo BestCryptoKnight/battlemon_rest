@@ -3,6 +3,12 @@ use crate::domain::{New, ParseToPositiveInt};
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct PaidOffset(i64);
 
+impl PaidOffset {
+    pub fn get(&self) -> i64 {
+        self.0
+    }
+}
+
 impl New for PaidOffset {
     fn new(offset: i64) -> Self {
         Self(offset)
