@@ -1,9 +1,9 @@
 use std::fmt::{Debug, Formatter, Result};
 
-use actix_web::http::{header, StatusCode};
+use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
 
-use crate::errors::{error_chain_fmt, JsonError};
+use crate::errors::{self, error_chain_fmt, JsonError};
 
 #[derive(thiserror::Error)]
 pub enum SaleError {
@@ -28,9 +28,6 @@ impl ResponseError for SaleError {
     }
 
     fn error_response(&self) -> HttpResponse {
-        let json_error = JsonError::new(self.to_string());
-        HttpResponse::build(self.status_code())
-            .insert_header((header::CONTENT_TYPE, "application/json"))
-            .json(json_error)
+        errors::default_error_response(self)
     }
 }
