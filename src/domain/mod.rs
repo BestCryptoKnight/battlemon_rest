@@ -7,6 +7,8 @@ pub use sale_days::*;
 pub use sale_limit::*;
 pub use sale_offset::*;
 
+use crate::domain::private::New;
+
 mod paid;
 mod paid_days;
 mod paid_limit;
@@ -16,13 +18,23 @@ mod sale_days;
 mod sale_limit;
 mod sale_offset;
 
-pub trait New {
-    fn new(value: i64) -> Self;
+pub(self) mod private {
+    pub enum Local {}
+
+    pub trait New {
+        fn new(value: i64) -> Self;
+    }
+
+    impl New for Local {
+        fn new(_: i64) -> Self {
+            unreachable!()
+        }
+    }
 }
 
-pub trait ParseToPositiveInt: New + Default
+pub trait ParseToPositiveInt
 where
-    Self: Sized,
+    Self: Sized + New + Default,
 {
     const ERROR: &'static str = "The parsed value must be positive.";
 
