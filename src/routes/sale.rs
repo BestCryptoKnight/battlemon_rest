@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::domain::{SaleDays, SaleFilter, SaleLimit, SaleOffset};
+use crate::domain::{ParseToPositiveInt, SaleDays, SaleFilter, SaleLimit, SaleOffset};
 use crate::errors::SaleError;
 
 use super::PaginationQuery;
