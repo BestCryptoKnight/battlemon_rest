@@ -1,4 +1,3 @@
-use super::PaginationQuery;
 use actix_web::{web, HttpResponse};
 use chrono::{DateTime, Duration, Utc};
 use rust_decimal::prelude::Zero;
@@ -6,7 +5,11 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
+use crate::domain::{PaidDays, PaidFilter, PaidLimit, PaidOffset, ParseToPositiveInt};
+use crate::errors::PaidError;
 use crate::routes::Sale;
+
+use super::PaginationQuery;
 
 #[derive(Serialize, Deserialize)]
 pub struct Paid {
@@ -43,29 +46,43 @@ pub struct PaidStatistics {
     pub top_sale: Decimal,
 }
 
-#[tracing::instrument(name = "Get statistics and sales history for last days", skip(pool))]
-pub async fn paid(filter: web::Query<PaginationQuery>, pool: web::Data<PgPool>) -> HttpResponse {
-    let now = Utc::now();
-    let days = filter.days.unwrap_or(1);
-    let start_from = now - Duration::days(days);
-    let rows = query_sales(start_from, &pool).await;
+impl TryFrom<PaginationQuery> for PaidFilter {
+    type Error = String;
 
-    match rows {
-        Ok(rows) => {
-            let (top_sale, total_sale_volume) = calculate_report(&rows);
-            let total_number_of_sales = rows.len();
-            let paid_json = Paid::new(rows, total_sale_volume, total_number_of_sales, top_sale);
-            HttpResponse::Ok().json(paid_json)
-        }
-        Err(e) => {
-            println!("Failed to execute query: {:?}", e);
-            HttpResponse::InternalServerError().finish()
-        }
+    fn try_from(query: PaginationQuery) -> Result<Self, Self::Error> {
+        let limit = PaidLimit::parse(query.limit)?;
+        let offset = PaidOffset::parse(query.offset)?;
+        let days = PaidDays::parse(query.days)?;
+
+        Ok(Self {
+            limit,
+            offset,
+            days,
+        })
     }
 }
 
+#[tracing::instrument(
+    name = "Get statistics and sales history for last days",
+    skip(filter, pool)
+)]
+pub async fn paid(
+    web::Query(filter): web::Query<PaginationQuery>,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, PaidError> {
+    let filter = filter.try_into().map_err(PaidError::ValidationError)?;
+    let sales = query_sales(filter, &pool).await?;
+
+    let (top_sale, total_sale_volume) = calculate_report(&sales);
+    let total_number_of_sales = sales.len();
+    let paid_json = Paid::new(sales, total_sale_volume, total_number_of_sales, top_sale);
+    Ok(HttpResponse::Ok().json(paid_json))
+}
+
 #[tracing::instrument(name = "Query sales for last days from database", skip(pool))]
-async fn query_sales(start_from: DateTime<Utc>, pool: &PgPool) -> Result<Vec<Sale>, sqlx::Error> {
+async fn query_sales(filter: PaidFilter, pool: &PgPool) -> Result<Vec<Sale>, anyhow::Error> {
+    let now = Utc::now();
+    let start_from = now - Duration::days(filter.days());
     let sales = sqlx::query_as!(
         Sale,
         r#"
@@ -75,19 +92,15 @@ async fn query_sales(start_from: DateTime<Utc>, pool: &PgPool) -> Result<Vec<Sal
         start_from,
     )
     .fetch_all(pool)
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        e
-    })?;
+    .await?;
 
     Ok(sales)
 }
 
-fn calculate_report(rows: &[Sale]) -> (Decimal, Decimal) {
+fn calculate_report(sales: &[Sale]) -> (Decimal, Decimal) {
     let mut top_sale = Decimal::zero();
     let mut total_sale_volume = Decimal::zero();
-    for row in rows {
+    for row in sales {
         if row.price > top_sale {
             top_sale = row.price
         }
@@ -100,8 +113,9 @@ fn calculate_report(rows: &[Sale]) -> (Decimal, Decimal) {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use rust_decimal_macros::dec;
+
+    use super::*;
 
     impl Default for Sale {
         fn default() -> Self {
