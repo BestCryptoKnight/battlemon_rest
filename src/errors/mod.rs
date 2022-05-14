@@ -1,7 +1,9 @@
 use std::error::Error;
-use std::fmt::{self, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 
 use serde::{Deserialize, Serialize};
+use actix_web::{HttpResponse, ResponseError};
+use actix_web::http::header;
 
 pub use paid::*;
 pub use sale::*;
@@ -29,4 +31,14 @@ impl JsonError {
     pub fn new(error: String) -> Self {
         Self { error }
     }
+}
+
+pub fn default_error_response<T>(error: &T) -> HttpResponse
+where
+    T: Debug + Display + ResponseError,
+{
+    let json_error = JsonError::new(error.to_string());
+    HttpResponse::build(error.status_code())
+        .insert_header((header::CONTENT_TYPE, "application/json"))
+        .json(json_error)
 }
