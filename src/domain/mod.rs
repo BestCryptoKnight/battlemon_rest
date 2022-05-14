@@ -7,7 +7,7 @@ pub use sale_days::*;
 pub use sale_limit::*;
 pub use sale_offset::*;
 
-use crate::domain::private::New;
+use self::private::New;
 
 mod paid;
 mod paid_days;
