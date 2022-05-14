@@ -3,8 +3,10 @@ use std::fmt::{self, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+pub use paid::*;
 pub use sale::*;
 
+mod paid;
 mod sale;
 
 fn error_chain_fmt(error: &impl Error, f: &mut Formatter<'_>) -> fmt::Result {
