@@ -1,4 +1,4 @@
-pub use crate::domain::{New, ParseToPositiveInt};
+use crate::domain::{New, ParseToPositiveInt};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct SaleLimit(i64);
