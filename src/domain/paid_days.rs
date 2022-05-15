@@ -15,7 +15,9 @@ impl New for PaidDays {
     }
 }
 
-impl ParseToPositiveInt for PaidDays {}
+impl ParseToPositiveInt for PaidDays {
+    const ERROR: &'static str = "The parsed value of days must be positive.";
+}
 
 impl Default for PaidDays {
     fn default() -> Self {
