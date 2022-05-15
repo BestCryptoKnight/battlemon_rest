@@ -1,4 +1,5 @@
 use once_cell::sync::Lazy;
+use reqwest::{Client, Response};
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 
@@ -26,12 +27,20 @@ pub struct TestApp {
 }
 
 impl TestApp {
-    pub async fn get_sales(&self, query: &str) -> reqwest::Response {
-        reqwest::Client::new()
-            .get(&format!("{}/sales?{query}", self.address))
+    async fn get(&self, path: &str, query: &str) -> Response {
+        Client::new()
+            .get(&format!("{}/{path}?{query}", self.address))
             .send()
             .await
-            .unwrap_or_else(|_| panic!("Failed to execute request with query: {query}"))
+            .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
+    }
+
+    pub async fn get_paid(&self, query: &str) -> Response {
+        self.get("paid", query).await
+    }
+
+    pub async fn get_sales(&self, query: &str) -> Response {
+        self.get("sales", query).await
     }
 }
 
