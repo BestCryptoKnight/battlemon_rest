@@ -131,3 +131,37 @@ async fn paid_fails_and_return_500_if_there_is_a_fatal_database_error() {
 
     assert_json_error(response).await
 }
+
+#[tokio::test]
+async fn paid_fails_and_return_400_when_invalid_queries() {
+    let app = spawn_app().await;
+
+    let invalid_queries = [
+        "limit",
+        "limit=",
+        "limit=-1",
+        r#"limit="abc""#,
+        r#"limit="10""#,
+        "offset",
+        "offset=",
+        "offset=-1",
+        r#"offset="abc""#,
+        r#"offset="10""#,
+        "days",
+        "days=",
+        "days=-1",
+        r#"days="abc""#,
+        r#"days="10""#,
+    ];
+
+    for invalid_query in invalid_queries {
+        let response = app.get_paid(invalid_query).await;
+        let actual_status = response.status().as_u16();
+        assert_eq!(
+            actual_status, 400,
+            "Actual: {}. Expected: 400. Wrong query is: {}",
+            actual_status, invalid_query
+        );
+        assert_json_error(response).await;
+    }
+}
