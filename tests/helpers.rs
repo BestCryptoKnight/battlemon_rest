@@ -23,6 +23,7 @@ static TRACING: Lazy<()> = Lazy::new(|| {
 
 pub struct TestApp {
     pub address: String,
+    pub db_name: String,
     pub db_pool: PgPool,
 }
 
@@ -62,6 +63,7 @@ pub async fn spawn_app() -> TestApp {
 
     TestApp {
         address,
+        db_name: config.database.database_name.clone(),
         db_pool: get_connection_pool(&config.database),
     }
 }
