@@ -87,9 +87,11 @@ async fn query_sales(filter: PaidFilter, pool: &PgPool) -> Result<Vec<Sale>, any
         Sale,
         r#"
         SELECT id, prev_owner, curr_owner, token_id, price, date
-        FROM sales WHERE date >= $1;
+        FROM sales WHERE date >= $1 ORDER BY date OFFSET $2 LIMIT $3;
         "#,
         start_from,
+        filter.offset(),
+        filter.limit(),
     )
     .fetch_all(pool)
     .await?;
