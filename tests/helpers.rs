@@ -89,7 +89,7 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     conn_pool
 }
 
-pub async fn assert_json_error(response: reqwest::Response) {
+pub async fn assert_json_error(response: Response) {
     let result = response.json::<JsonError>().await;
     assert!(
         result.is_ok(),
