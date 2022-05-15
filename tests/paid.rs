@@ -1,14 +1,14 @@
-use battlemon_rest::routes::Paid;
 use chrono::Utc;
 use fake::{Fake, Faker};
 
-use utils::spawn_app;
+use battlemon_rest::routes::Paid;
+use helpers::spawn_app;
 
 mod dummies;
-mod utils;
+mod helpers;
 
 #[tokio::test]
-async fn paid() {
+async fn paid_return_200_and_1_sale_in_history_stored_in_database() {
     let app = spawn_app().await;
     let mut expected_sale: dummies::Sale = Faker.fake();
     expected_sale.date = Utc::now();
@@ -28,17 +28,11 @@ async fn paid() {
     .await
     .expect("Failed to execute query");
 
-    let client = reqwest::Client::new();
-    let response = client
-        .get(&format!("{}/paid?days=1", app.address))
-        .send()
-        .await
-        .expect("Failed to execute request");
-    //todo: this test sometimes is failed. may be because something wrong with calculation
+    let response = app.get_paid("days=1").await;
     assert!(response.status().is_success());
     let actual_sales = response
         .json::<Paid>()
         .await
-        .expect("Couldn't deserialize response");
+        .expect("Couldn't deserialize response. Response must contain serialized `Paid` struct");
     assert_eq!(actual_sales.history.len(), 1);
 }
