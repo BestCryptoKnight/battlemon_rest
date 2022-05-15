@@ -53,7 +53,7 @@ pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>,
         Sale,
         r#"
         SELECT id, prev_owner, curr_owner, token_id, price, date
-        FROM sales ORDER BY id LIMIT $1 OFFSET $2;
+        FROM sales ORDER BY date LIMIT $1 OFFSET $2;
         "#,
         filter.limit(),
         filter.offset()
