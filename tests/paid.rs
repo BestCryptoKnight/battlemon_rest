@@ -10,8 +10,7 @@ mod helpers;
 #[tokio::test]
 async fn paid_return_200_and_1_sale_in_history_stored_in_database() {
     let app = spawn_app().await;
-    let mut expected_sale: dummies::Sale = Faker.fake();
-    expected_sale.date = Utc::now();
+    let expected_sale: dummies::Sale = Faker.fake();
     sqlx::query!(
         r#"
         INSERT INTO sales (id, prev_owner, curr_owner, token_id, price, date)
@@ -22,7 +21,7 @@ async fn paid_return_200_and_1_sale_in_history_stored_in_database() {
         expected_sale.curr_owner,
         expected_sale.token_id,
         expected_sale.price,
-        expected_sale.date
+        Utc::now()
     )
     .execute(&app.db_pool)
     .await
