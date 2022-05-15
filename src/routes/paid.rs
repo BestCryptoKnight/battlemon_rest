@@ -20,14 +20,14 @@ pub struct Paid {
 impl Paid {
     fn new(
         history: Vec<Sale>,
-        total_sale_volume: Decimal,
-        total_number_of_sales: usize,
-        top_sale: Decimal,
+        total_trades_volume: Decimal,
+        total_number_of_trades: usize,
+        top_trade: Decimal,
     ) -> Self {
         let statistics = PaidStatistics {
-            total_sale_volume,
-            total_number_of_sales,
-            top_sale,
+            total_trades_volume,
+            total_number_of_trades,
+            top_trade,
         };
 
         Self {
@@ -40,10 +40,10 @@ impl Paid {
 #[derive(Serialize, Deserialize)]
 pub struct PaidStatistics {
     #[serde(with = "rust_decimal::serde::str")]
-    pub total_sale_volume: Decimal,
-    pub total_number_of_sales: usize,
+    pub total_trades_volume: Decimal,
+    pub total_number_of_trades: usize,
     #[serde(with = "rust_decimal::serde::str")]
-    pub top_sale: Decimal,
+    pub top_trade: Decimal,
 }
 
 impl TryFrom<PaginationQuery> for PaidFilter {
@@ -63,7 +63,7 @@ impl TryFrom<PaginationQuery> for PaidFilter {
 }
 
 #[tracing::instrument(
-    name = "Get statistics and sales history for last days",
+    name = "Get statistics and trades history for last days",
     skip(filter, pool)
 )]
 pub async fn paid(
@@ -71,19 +71,24 @@ pub async fn paid(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PaidError> {
     let filter = filter.try_into().map_err(PaidError::ValidationError)?;
-    let sales = query_sales(filter, &pool).await?;
+    let trades = query_trades(filter, &pool).await?;
 
-    let (top_sale, total_sale_volume) = calculate_report(&sales);
-    let total_number_of_sales = sales.len();
-    let paid_json = Paid::new(sales, total_sale_volume, total_number_of_sales, top_sale);
+    let (top_trade, total_trade_volume) = calculate_report(&trades);
+    let total_number_of_trades = trades.len();
+    let paid_json = Paid::new(
+        trades,
+        total_trade_volume,
+        total_number_of_trades,
+        top_trade,
+    );
     Ok(HttpResponse::Ok().json(paid_json))
 }
 
-#[tracing::instrument(name = "Query sales for last days from database", skip(pool))]
-async fn query_sales(filter: PaidFilter, pool: &PgPool) -> Result<Vec<Sale>, anyhow::Error> {
+#[tracing::instrument(name = "Query trades for last days from database", skip(pool))]
+async fn query_trades(filter: PaidFilter, pool: &PgPool) -> Result<Vec<Sale>, anyhow::Error> {
     let now = Utc::now();
     let start_from = now - Duration::days(filter.days());
-    let sales = sqlx::query_as!(
+    let trades = sqlx::query_as!(
         Sale,
         r#"
         SELECT id, prev_owner, curr_owner, token_id, price, date
@@ -96,21 +101,21 @@ async fn query_sales(filter: PaidFilter, pool: &PgPool) -> Result<Vec<Sale>, any
     .fetch_all(pool)
     .await?;
 
-    Ok(sales)
+    Ok(trades)
 }
 
-fn calculate_report(sales: &[Sale]) -> (Decimal, Decimal) {
-    let mut top_sale = Decimal::zero();
-    let mut total_sale_volume = Decimal::zero();
-    for row in sales {
-        if row.price > top_sale {
-            top_sale = row.price
+fn calculate_report(trades: &[Sale]) -> (Decimal, Decimal) {
+    let mut top_trade = Decimal::zero();
+    let mut total_trade_volume = Decimal::zero();
+    for row in trades {
+        if row.price > top_trade {
+            top_trade = row.price
         }
 
-        total_sale_volume += row.price
+        total_trade_volume += row.price
     }
 
-    (top_sale, total_sale_volume)
+    (top_trade, total_trade_volume)
 }
 
 #[cfg(test)]
@@ -135,62 +140,62 @@ mod test {
     #[test]
     fn calculate_report_empty() {
         let rows = vec![];
-        let (top_sale, total_sale_volume) = calculate_report(&rows);
-        assert_eq!(top_sale, Decimal::zero());
-        assert_eq!(total_sale_volume, Decimal::zero());
+        let (top_trade, total_trades_volume) = calculate_report(&rows);
+        assert_eq!(top_trade, Decimal::zero());
+        assert_eq!(total_trades_volume, Decimal::zero());
     }
 
     #[test]
-    fn calculate_report_one_sale() {
-        let sale = Sale {
+    fn calculate_report_one_trade() {
+        let trade = Sale {
             price: dec!(10),
             ..Sale::default()
         };
 
-        let rows = vec![sale];
-        let (top_sale, total_sale_volume) = calculate_report(&rows);
-        assert_eq!(top_sale, dec!(10));
-        assert_eq!(total_sale_volume, dec!(10));
+        let rows = vec![trade];
+        let (top_trade, total_trades_volume) = calculate_report(&rows);
+        assert_eq!(top_trade, dec!(10));
+        assert_eq!(total_trades_volume, dec!(10));
     }
 
     #[test]
-    fn calculate_report_two_sale() {
-        let sale0 = Sale {
+    fn calculate_report_two_trades() {
+        let trade0 = Sale {
             price: dec!(1),
             ..Sale::default()
         };
 
-        let sale1 = Sale {
+        let trade1 = Sale {
             price: dec!(10),
             ..Sale::default()
         };
 
-        let rows = vec![sale0, sale1];
-        let (top_sale, total_sale_volume) = calculate_report(&rows);
-        assert_eq!(top_sale, dec!(10));
-        assert_eq!(total_sale_volume, dec!(11));
+        let rows = vec![trade0, trade1];
+        let (top_trade, total_trade_volume) = calculate_report(&rows);
+        assert_eq!(top_trade, dec!(10));
+        assert_eq!(total_trade_volume, dec!(11));
     }
 
     #[test]
-    fn calculate_report_tree_sale() {
-        let sale0 = Sale {
+    fn calculate_report_tree_trades() {
+        let trade0 = Sale {
             price: dec!(5),
             ..Sale::default()
         };
 
-        let sale1 = Sale {
+        let trade1 = Sale {
             price: dec!(3),
             ..Sale::default()
         };
 
-        let sale2 = Sale {
+        let trade2 = Sale {
             price: dec!(1),
             ..Sale::default()
         };
 
-        let rows = vec![sale0, sale1, sale2];
-        let (top_sale, total_sale_volume) = calculate_report(&rows);
-        assert_eq!(top_sale, dec!(5));
-        assert_eq!(total_sale_volume, dec!(9));
+        let rows = vec![trade0, trade1, trade2];
+        let (top_trade, total_trades_volume) = calculate_report(&rows);
+        assert_eq!(top_trade, dec!(5));
+        assert_eq!(total_trades_volume, dec!(9));
     }
 }
