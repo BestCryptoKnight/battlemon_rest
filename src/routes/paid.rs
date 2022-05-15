@@ -1,4 +1,5 @@
 use actix_web::{web, HttpResponse};
+use anyhow::Context;
 use chrono::{Duration, Utc};
 use rust_decimal::prelude::Zero;
 use rust_decimal::Decimal;
@@ -71,16 +72,12 @@ pub async fn paid(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PaidError> {
     let filter = filter.try_into().map_err(PaidError::ValidationError)?;
-    let trades = query_trades(filter, &pool).await?;
+    let trades = query_trades(filter, &pool)
+        .await
+        .context("Failed to get sale's data from the database.")?;
 
     let (top_trade, total_trade_volume) = calculate_report(&trades);
-    let total_number_of_trades = trades.len();
-    let paid_json = Paid::new(
-        trades,
-        total_trade_volume,
-        total_number_of_trades,
-        top_trade,
-    );
+    let paid_json = Paid::new(trades, total_trade_volume, trades.len(), top_trade);
     Ok(HttpResponse::Ok().json(paid_json))
 }
 
