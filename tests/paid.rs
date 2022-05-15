@@ -4,6 +4,8 @@ use fake::{Fake, Faker};
 use battlemon_rest::routes::Paid;
 use helpers::spawn_app;
 
+use crate::helpers::assert_json_error;
+
 mod dummies;
 mod helpers;
 
@@ -111,4 +113,21 @@ async fn paid_success_and_returns_200_for_different_valid_queries() {
             actual_trades_number
         );
     }
+}
+
+#[tokio::test]
+async fn paid_fails_and_return_500_if_there_is_a_fatal_database_error() {
+    let app = spawn_app().await;
+    sqlx::query!("ALTER TABLE sales DROP COLUMN price;",)
+        .execute(&app.db_pool)
+        .await
+        .unwrap();
+    let response = app.get_paid("days=1&offset=2&limit=10").await;
+    assert_eq!(
+        response.status().as_u16(),
+        500,
+        "The API didn't return 500 Internal Server Error"
+    );
+
+    assert_json_error(response).await
 }
