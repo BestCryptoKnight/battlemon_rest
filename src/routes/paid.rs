@@ -77,7 +77,8 @@ pub async fn paid(
         .context("Failed to get sale's data from the database.")?;
 
     let (top_trade, total_trade_volume) = calculate_report(&trades);
-    let paid_json = Paid::new(trades, total_trade_volume, trades.len(), top_trade);
+    let trades_number = trades.len();
+    let paid_json = Paid::new(trades, total_trade_volume, trades_number, top_trade);
     Ok(HttpResponse::Ok().json(paid_json))
 }
 
@@ -104,12 +105,12 @@ async fn query_trades(filter: PaidFilter, pool: &PgPool) -> Result<Vec<Sale>, an
 fn calculate_report(trades: &[Sale]) -> (Decimal, Decimal) {
     let mut top_trade = Decimal::zero();
     let mut total_trade_volume = Decimal::zero();
-    for row in trades {
-        if row.price > top_trade {
-            top_trade = row.price
+    for trade in trades {
+        if trade.price > top_trade {
+            top_trade = trade.price
         }
 
-        total_trade_volume += row.price
+        total_trade_volume += trade.price
     }
 
     (top_trade, total_trade_volume)
