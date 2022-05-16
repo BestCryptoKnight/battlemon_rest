@@ -3,7 +3,7 @@ use std::fmt::{Debug, Formatter, Result};
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
 
-use crate::errors::{self, error_chain_fmt, JsonError};
+use crate::errors::{self, error_chain_fmt};
 
 #[derive(thiserror::Error)]
 pub enum SaleError {
