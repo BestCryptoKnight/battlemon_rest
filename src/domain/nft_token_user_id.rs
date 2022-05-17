@@ -95,4 +95,21 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn none_is_ok_none() {
+        let token_id: Option<String> = None;
+        let actual = UserId::parse(token_id);
+        assert!(
+            actual.is_ok(),
+            "The actual `UserId` isn't `Ok`, actual value {:?}",
+            actual
+        );
+        let inner_actual = actual.unwrap();
+        assert!(
+            inner_actual.is_none(),
+            "The actual `UserId` isn't `None`, actual value {:?}",
+            inner_actual
+        );
+    }
 }
