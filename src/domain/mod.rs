@@ -1,5 +1,6 @@
 pub use nft_token::*;
 pub use nft_token_user_id::*;
+pub use nft_token_token_id::*;
 pub use paid::*;
 pub use paid_days::*;
 pub use paid_limit::*;
@@ -21,6 +22,7 @@ mod sale;
 mod sale_days;
 mod sale_limit;
 mod sale_offset;
+mod nft_token_token_id;
 
 pub(self) mod private {
     pub enum Local {}
