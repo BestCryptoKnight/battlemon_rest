@@ -108,7 +108,7 @@ mod tests {
         let inner_actual = actual.unwrap();
         assert!(
             inner_actual.is_none(),
-            "The actual `UserId` isn't `None`, actual value {:?}",
+            "The actual inner of `UserId` isn't `None`, actual inner value {:?}",
             inner_actual
         );
     }
