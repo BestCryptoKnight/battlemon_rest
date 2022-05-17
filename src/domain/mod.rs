@@ -1,6 +1,6 @@
 pub use nft_token::*;
-pub use nft_token_user_id::*;
 pub use nft_token_token_id::*;
+pub use nft_token_user_id::*;
 pub use paid::*;
 pub use paid_days::*;
 pub use paid_limit::*;
@@ -13,6 +13,7 @@ pub use sale_offset::*;
 use self::private::New;
 
 mod nft_token;
+mod nft_token_token_id;
 mod nft_token_user_id;
 mod paid;
 mod paid_days;
@@ -22,7 +23,6 @@ mod sale;
 mod sale_days;
 mod sale_limit;
 mod sale_offset;
-mod nft_token_token_id;
 
 pub(self) mod private {
     pub enum Local {}
@@ -51,6 +51,10 @@ where
             Some(v) => Ok(Self::new(v)),
         }
     }
+}
+
+pub trait Parse<T>: Sized {
+    fn parse(value: Option<T>) -> Result<Option<Self>, String>;
 }
 
 #[cfg(test)]
