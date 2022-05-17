@@ -2,17 +2,12 @@ use std::lazy::SyncLazy;
 
 use regex::Regex;
 
+use crate::domain::Parse;
+
 static RE: SyncLazy<Regex> = SyncLazy::new(|| {
     Regex::new(r#"^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$"#)
         .expect("Couldn't compile regexp expression")
 });
-
-#[derive(Debug)]
-pub struct UserId(String);
-
-pub trait Parse<T>: Sized {
-    fn parse(value: Option<T>) -> Result<Option<Self>, String>;
-}
 
 impl Parse<String> for UserId {
     fn parse(user_id: Option<String>) -> Result<Option<Self>, String> {
@@ -32,6 +27,9 @@ impl Parse<&str> for UserId {
     }
 }
 
+#[derive(Debug)]
+pub struct UserId(String);
+
 impl AsRef<str> for UserId {
     fn as_ref(&self) -> &str {
         &self.0
@@ -40,6 +38,8 @@ impl AsRef<str> for UserId {
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::Parse;
+
     use super::*;
 
     #[test]
