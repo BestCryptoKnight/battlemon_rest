@@ -58,7 +58,7 @@ async fn nft_tokens_query_by_owner_id() {
         let nft_tokens_json = response
             .json::<Vec<NftToken>>()
             .await
-            .expect("Couldn't deserialize response into `NftToken`");
+            .expect("Couldn't deserialize response into `Vec<NftToken>`");
         assert_eq!(
             nft_tokens_json.len(),
             length,
