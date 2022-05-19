@@ -9,7 +9,7 @@ mod dummies;
 mod helpers;
 
 #[tokio::test]
-async fn nft_tokens_query_by_owner_id_returns_200() {
+async fn nft_tokens_for_valid_query_by_owner_id_returns_200() {
     let app = spawn_app().await;
     let token_id = ["1", "2", "3", "4", "5"];
     let model = ModelKind::Lemon(Lemon {
