@@ -54,7 +54,11 @@ where
 }
 
 pub trait Parse<T>: Sized {
-    fn parse(value: Option<T>) -> Result<Option<Self>, String>;
+    fn parse(value: Option<T>) -> Result<Self, String>;
+}
+
+pub trait Take {
+    fn take(self) -> Option<String>;
 }
 
 #[cfg(test)]
