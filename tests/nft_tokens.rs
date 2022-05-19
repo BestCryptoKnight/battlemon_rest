@@ -1,9 +1,9 @@
 use sqlx::types::{chrono::Utc, Json, Uuid};
+use test_utils::{get_foo_lemon, tokens};
 
 use battlemon_rest::routes::NftToken;
 use helpers::spawn_app;
-use nft_models::lemon::{Cap, Cloth, Exo, Eyes, Head, Teeth};
-use nft_models::{Lemon, ModelKind};
+use nft_models::ModelKind;
 
 mod dummies;
 mod helpers;
@@ -11,15 +11,8 @@ mod helpers;
 #[tokio::test]
 async fn nft_tokens_for_valid_query_by_owner_id_returns_200() {
     let app = spawn_app().await;
-    let token_id = ["1", "2", "3", "4", "5"];
-    let model = ModelKind::Lemon(Lemon {
-        cap: Cap::MA01,
-        cloth: Cloth::MA01,
-        exo: Exo::BA01,
-        eyes: Eyes::A01,
-        head: Head::A01,
-        teeth: Teeth::A01,
-    });
+    let token_ids = tokens::<5>();
+    let model = ModelKind::Lemon(get_foo_lemon());
 
     let expected_owners_and_tokens_length = [
         ("owner1.testnet", 3),
@@ -28,7 +21,7 @@ async fn nft_tokens_for_valid_query_by_owner_id_returns_200() {
     ];
     let ipfs_hash = "somehash";
 
-    for (idx, id) in token_id.iter().enumerate() {
+    for (idx, id) in token_ids.iter().enumerate() {
         let owner_id = if idx < 3 {
             expected_owners_and_tokens_length[0].0
         } else {
