@@ -43,6 +43,10 @@ impl TestApp {
     pub async fn get_sales(&self, query: &str) -> Response {
         self.get("sales", query).await
     }
+
+    pub async fn get_nft_tokens(&self, query: &str) -> Response {
+        self.get("nft_tokens", query).await
+    }
 }
 
 pub async fn spawn_app() -> TestApp {
