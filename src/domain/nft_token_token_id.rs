@@ -1,35 +1,33 @@
-use crate::domain::Parse;
+use crate::domain::{impl_as_inner, impl_into_inner, Parse};
 
 #[derive(Debug)]
-pub struct TokenId(String);
+pub struct TokenId(Option<String>);
 
-impl AsRef<str> for TokenId {
-    fn as_ref(&self) -> &str {
-        &self.0
-    }
-}
+impl_into_inner!(TokenId);
+impl_as_inner!(TokenId);
 
 impl Parse<&str> for TokenId {
-    fn parse(token_id: Option<&str>) -> Result<Option<Self>, String> {
+    fn parse(token_id: Option<&str>) -> Result<Self, String> {
         match token_id.map(|v| v.trim()) {
-            None => Ok(None),
+            None => Ok(TokenId(None)),
             Some(id) if id.is_empty() => Err("Token id is empty".to_string()),
             Some(id) if !id.chars().all(|ch| ch.is_ascii_digit()) => {
                 Err("The token id must contain only digits".to_string())
             }
-            Some(id) => Ok(Some(TokenId(id.to_string()))),
+            Some(id) => Ok(TokenId(Some(id.to_string()))),
         }
     }
 }
 
 impl Parse<String> for TokenId {
-    fn parse(token_id: Option<String>) -> Result<Option<Self>, String> {
+    fn parse(token_id: Option<String>) -> Result<Self, String> {
         Self::parse(token_id.as_deref())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::IntoInner;
     use rand::prelude::StdRng;
     use rand::{Rng, SeedableRng};
 
@@ -84,7 +82,7 @@ mod tests {
             "The actual `TokenId` isn't `Ok`, actual value {:?}",
             actual
         );
-        let inner_actual = actual.unwrap();
+        let inner_actual = actual.unwrap().into_inner();
         assert!(
             inner_actual.is_none(),
             "The actual inner of `TokenId` isn't `None`, actual inner value {:?}",

@@ -1,11 +1,25 @@
-use super::PaginationQuery;
 use actix_web::{web, HttpResponse};
+use anyhow::Context;
 use chrono::{DateTime, Utc};
-use nft_models::ModelKind;
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 use sqlx::PgPool;
 use uuid::Uuid;
+
+use nft_models::ModelKind;
+
+use crate::domain::{NftTokenFilter, OwnerId, Parse, TokenId};
+use crate::errors::NftTokensError;
+
+#[derive(Debug, Deserialize)]
+pub struct NftTokenQuery {
+    pub days: Option<i64>,
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+    pub owner_id: Option<String>,
+    pub token_id: Option<String>,
+    pub nft_trait: Option<String>,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NftToken {
@@ -23,28 +37,46 @@ pub struct NftToken {
     pub db_created_at: DateTime<Utc>,
 }
 
+impl TryFrom<NftTokenQuery> for NftTokenFilter {
+    type Error = String;
+    fn try_from(query: NftTokenQuery) -> Result<Self, Self::Error> {
+        let token_id = TokenId::parse(query.token_id)?;
+        let owner_id = OwnerId::parse(query.owner_id)?;
+        Ok(Self { token_id, owner_id })
+    }
+}
+
+#[tracing::instrument(name = "Handle nft tokens request", skip(filter, pool))]
 pub async fn nft_tokens(
-    filter: web::Query<PaginationQuery>,
+    web::Query(filter): web::Query<NftTokenQuery>,
     pool: web::Data<PgPool>,
-) -> HttpResponse {
-    let limit = filter.limit.unwrap_or(100);
-    let offset = filter.offset.unwrap_or_default();
-    let rows = sqlx::query_as!(
+) -> Result<HttpResponse, NftTokensError> {
+    let filter: NftTokenFilter = filter.try_into().map_err(NftTokensError::ValidationError)?;
+    let nft_tokens = query_nft_tokens(pool, filter)
+        .await
+        .context("Failed to get the nft tokens data from database.")?;
+
+    Ok(HttpResponse::Ok().json(nft_tokens))
+}
+
+#[tracing::instrument(name = "Query nft tokens from database", skip(filter, pool))]
+pub async fn query_nft_tokens(
+    pool: web::Data<PgPool>,
+    filter: NftTokenFilter,
+) -> Result<Vec<NftToken>, anyhow::Error> {
+    let rows= sqlx::query_as!(
         NftToken,
         r#"
         SELECT id, owner_id, token_id, media, model as "model: Json<ModelKind>", db_created_at, copies, description, expires_at, issued_at, title, media_hash
-        FROM nft_tokens ORDER BY id LIMIT $1 OFFSET $2;
+        FROM nft_tokens
+        WHERE ($1::text IS null OR token_id = $1)
+            AND ($2::text IS null OR owner_id = $2)
         "#,
-        limit,
-        offset
-    ).fetch_all(pool.get_ref())
-    .await;
+        filter.token_id(),
+        filter.owner_id(),
+    )
+    .fetch_all(pool.get_ref())
+    .await?;
 
-    match rows {
-        Ok(rows) => HttpResponse::Ok().json(rows),
-        Err(e) => {
-            println!("Failed to execute query: {:?}", e);
-            HttpResponse::InternalServerError().finish()
-        }
-    }
+    Ok(rows)
 }

@@ -61,6 +61,10 @@ pub trait IntoInner {
     fn into_inner(self) -> Option<String>;
 }
 
+pub trait AsInner {
+    fn as_inner(&self) -> Option<&str>;
+}
+
 macro_rules! impl_into_inner {
     ($t:ident) => {
         impl crate::domain::IntoInner for $t {
@@ -71,7 +75,18 @@ macro_rules! impl_into_inner {
     };
 }
 
-pub(crate) use impl_into_inner;
+macro_rules! impl_as_inner {
+    ($t:ident) => {
+        impl crate::domain::AsInner for $t {
+            fn as_inner(&self) -> Option<&str> {
+                self.0.as_deref()
+            }
+        }
+    };
+}
+
+#[rustfmt::skip]
+pub(crate) use {impl_into_inner, impl_as_inner};
 
 #[cfg(test)]
 pub mod helpers {
