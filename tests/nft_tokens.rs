@@ -9,7 +9,7 @@ mod dummies;
 mod helpers;
 
 #[tokio::test]
-async fn nft_tokens_query_by_owner_id() {
+async fn nft_tokens_query_by_owner_id_returns_200() {
     let app = spawn_app().await;
     let token_id = ["1", "2", "3", "4", "5"];
     let model = ModelKind::Lemon(Lemon {
@@ -55,6 +55,7 @@ async fn nft_tokens_query_by_owner_id() {
     for (id, length) in expected_owners_and_tokens_length {
         let query = format!("owner_id={id}");
         let response = app.get_nft_tokens(&query).await;
+        assert!(response.status().is_success());
         let nft_tokens_json = response
             .json::<Vec<NftToken>>()
             .await
