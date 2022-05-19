@@ -1,6 +1,6 @@
-use utils::spawn_app;
+use helpers::spawn_app;
 
-mod utils;
+mod helpers;
 
 #[tokio::test]
 async fn health_check_works() {
