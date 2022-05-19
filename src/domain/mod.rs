@@ -57,9 +57,21 @@ pub trait Parse<T>: Sized {
     fn parse(value: Option<T>) -> Result<Self, String>;
 }
 
-pub trait Take {
-    fn take(self) -> Option<String>;
+pub trait IntoInner {
+    fn into_inner(self) -> Option<String>;
 }
+
+macro_rules! impl_into_inner {
+    ($t:ident) => {
+        impl crate::domain::IntoInner for $t {
+            fn into_inner(self) -> Option<String> {
+                self.0
+            }
+        }
+    };
+}
+
+pub(crate) use impl_into_inner;
 
 #[cfg(test)]
 pub mod helpers {
