@@ -1,4 +1,6 @@
 pub use nft_token::*;
+pub use nft_token_limit::*;
+pub use nft_token_offset::*;
 pub use nft_token_token_id::*;
 pub use nft_token_user_id::*;
 pub use paid::*;
@@ -13,6 +15,8 @@ pub use sale_offset::*;
 use self::private::New;
 
 mod nft_token;
+mod nft_token_limit;
+mod nft_token_offset;
 mod nft_token_token_id;
 mod nft_token_user_id;
 mod paid;
