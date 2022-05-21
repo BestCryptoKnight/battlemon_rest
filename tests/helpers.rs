@@ -27,6 +27,7 @@ pub struct TestApp {
     pub db_pool: PgPool,
 }
 
+#[allow(dead_code)]
 impl TestApp {
     async fn get(&self, path: &str, query: &str) -> Response {
         Client::new()
@@ -93,6 +94,7 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     conn_pool
 }
 
+#[allow(dead_code)]
 pub async fn assert_json_error(response: Response) {
     let result = response.json::<JsonError>().await;
     assert!(
