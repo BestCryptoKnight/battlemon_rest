@@ -1,27 +1,13 @@
-use crate::domain::{New, ParseToPositiveInt};
-
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct PaidOffset(i64);
 
-impl PaidOffset {
-    pub fn get(&self) -> i64 {
-        self.0
-    }
-}
-
-impl New for PaidOffset {
-    fn new(offset: i64) -> Self {
-        Self(offset)
-    }
-}
-
-impl ParseToPositiveInt for PaidOffset {
-    const ERROR: &'static str = "The offset value must be positive";
-}
+crate::domain::impl_offset_for_domain!(PaidOffset);
 
 #[cfg(test)]
 mod tests {
     use crate::domain::helpers::PositiveIntegersFixture;
+    use crate::domain::private::New;
+    use crate::domain::ParseToPositiveInt;
 
     use super::*;
 
