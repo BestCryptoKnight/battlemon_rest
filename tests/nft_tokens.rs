@@ -1,12 +1,30 @@
 use sqlx::types::{chrono::Utc, Json, Uuid};
 use test_utils::{get_foo_lemon, tokens};
 
+use crate::helpers::assert_json_error;
 use battlemon_rest::routes::NftToken;
 use helpers::spawn_app;
 use nft_models::ModelKind;
 
 mod dummies;
 mod helpers;
+
+#[tokio::test]
+async fn nft_tokens_fails_and_return_500_if_there_is_a_fatal_database_error() {
+    let app = spawn_app().await;
+    sqlx::query!("ALTER TABLE nft_tokens DROP COLUMN owner_id;",)
+        .execute(&app.db_pool)
+        .await
+        .unwrap();
+    let response = app.get_nft_tokens("owner_id=alice.near").await;
+    assert_eq!(
+        response.status().as_u16(),
+        500,
+        "The API didn't return 500 Internal Server Error"
+    );
+
+    assert_json_error(response).await
+}
 
 #[tokio::test]
 async fn nft_tokens_for_valid_query_by_token_id_returns_200() {
