@@ -1,33 +1,13 @@
-use crate::domain::{New, ParseToPositiveInt};
-
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct SaleLimit(i64);
 
-impl Default for SaleLimit {
-    fn default() -> Self {
-        Self(100)
-    }
-}
-
-impl SaleLimit {
-    pub fn get(self) -> i64 {
-        self.0
-    }
-}
-
-impl New for SaleLimit {
-    fn new(value: i64) -> Self {
-        Self(value)
-    }
-}
-
-impl ParseToPositiveInt for SaleLimit {
-    const ERROR: &'static str = "The limit value must be positive.";
-}
+crate::domain::impl_limit_for_domain!(SaleLimit);
 
 #[cfg(test)]
 mod tests {
     use crate::domain::helpers::PositiveIntegersFixture;
+    use crate::domain::ParseToPositiveInt;
+    use crate::domain::private::New;
 
     use super::*;
 
