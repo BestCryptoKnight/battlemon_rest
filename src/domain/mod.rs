@@ -89,8 +89,54 @@ macro_rules! impl_as_inner {
     };
 }
 
+macro_rules! impl_limit_for_domain {
+    ($t:ident) => {
+        impl Default for $t {
+            fn default() -> Self {
+                Self(100)
+            }
+        }
+
+        impl $t {
+            pub fn get(self) -> i64 {
+                self.0
+            }
+        }
+
+        impl crate::domain::New for $t {
+            fn new(value: i64) -> Self {
+                    Self(value)
+                }
+        }
+
+        impl crate::domain::ParseToPositiveInt for $t {
+            const ERROR: &'static str = "The limit value must be positive.";
+        }
+    };
+}
+
+macro_rules! impl_offset_for_domain {
+    ($t:ident) => {
+        impl crate::domain::New for $t {
+            fn new(offset: i64) -> Self {
+                Self(offset)
+            }
+        }
+
+        impl crate::domain::ParseToPositiveInt for $t {
+            const ERROR: &'static str = "The offset value must be positive.";
+        }
+
+        impl $t {
+            pub fn get(self) -> i64 {
+                self.0
+            }
+        }
+    };
+}
+
 #[rustfmt::skip]
-pub(crate) use {impl_into_inner, impl_as_inner};
+pub(crate) use {impl_into_inner, impl_as_inner, impl_limit_for_domain, impl_offset_for_domain};
 
 #[cfg(test)]
 pub mod helpers {
