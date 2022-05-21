@@ -8,7 +8,10 @@ use uuid::Uuid;
 
 use nft_models::ModelKind;
 
-use crate::domain::{NftTokenFilter, OwnerId, Parse, TokenId};
+use crate::domain::{
+    NftTokenFilter, NftTokenLimit, NftTokenOffset, NftTokenOwnerId, NftTokenTokenId, Parse,
+    ParseToPositiveInt,
+};
 use crate::errors::NftTokensError;
 
 #[derive(Debug, Deserialize)]
@@ -40,9 +43,16 @@ pub struct NftToken {
 impl TryFrom<NftTokenQuery> for NftTokenFilter {
     type Error = String;
     fn try_from(query: NftTokenQuery) -> Result<Self, Self::Error> {
-        let token_id = TokenId::parse(query.token_id)?;
-        let owner_id = OwnerId::parse(query.owner_id)?;
-        Ok(Self { token_id, owner_id })
+        let token_id = NftTokenTokenId::parse(query.token_id)?;
+        let owner_id = NftTokenOwnerId::parse(query.owner_id)?;
+        let limit = NftTokenLimit::parse(query.limit)?;
+        let offset = NftTokenOffset::parse(query.offset)?;
+        Ok(Self {
+            token_id,
+            owner_id,
+            limit,
+            offset,
+        })
     }
 }
 
