@@ -12,6 +12,40 @@ mod dummies;
 mod helpers;
 
 #[tokio::test]
+async fn nft_tokens_return_400_with_invalid_queries() {
+    let app = spawn_app().await;
+    let invalid_queries = [
+        "owner_id=alice.near&owner_id=bob.near",
+        "limit",
+        "limit=",
+        "limit=-1",
+        r#"limit="abc""#,
+        r#"limit="10""#,
+        "offset",
+        "offset=",
+        "offset=-1",
+        r#"offset="abc""#,
+        r#"offset="10""#,
+        "days",
+        "days=",
+        "days=-1",
+        r#"days="abc""#,
+        r#"days="10""#,
+    ];
+
+    for query in invalid_queries {
+        let response = app.get_nft_tokens(query).await;
+        assert_eq!(
+            response.status(),
+            400,
+            "Response status is not 400 for query `{}`",
+            query
+        );
+        assert_json_error(response).await;
+    }
+}
+
+#[tokio::test]
 async fn nft_tokens_success_with_valid_queries() {
     let app = spawn_app().await;
     let alice_tokens = (0..50).map(|_| AliceNftToken.fake());
