@@ -1,9 +1,8 @@
-use crate::domain::{AsInner, Limit, NftTokenOwnerId, NftTokenTokenId, Offset};
+use crate::domain::{AsInner, Limit, NftTokenDays, NftTokenOwnerId, NftTokenTokenId, Offset};
 
 pub struct NftTokenFilter {
     pub offset: Offset,
     pub limit: Limit,
-    // pub days:
     pub owner_id: NftTokenOwnerId,
     pub token_id: NftTokenTokenId,
     // pub by_token_trait: TokenTrait,
