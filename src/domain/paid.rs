@@ -1,10 +1,8 @@
-use crate::domain::{PaidDays, PaidLimit, PaidOffset};
-
 #[derive(Debug)]
 pub struct PaidFilter {
-    pub limit: PaidLimit,
-    pub offset: PaidOffset,
-    pub days: PaidDays,
+    pub limit: crate::domain::Limit,
+    pub offset: crate::domain::Offset,
+    pub days: crate::domain::PaidDays,
 }
 
 impl PaidFilter {

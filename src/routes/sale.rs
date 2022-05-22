@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::domain::{ParseToPositiveInt, SaleDays, SaleFilter, SaleLimit, SaleOffset};
+use crate::domain::{Limit, Offset, ParseToPositiveInt, SaleDays, SaleFilter};
 use crate::errors::SaleError;
 
 use super::PaginationQuery;
@@ -26,8 +26,8 @@ impl TryFrom<PaginationQuery> for SaleFilter {
     type Error = String;
 
     fn try_from(query: PaginationQuery) -> Result<Self, Self::Error> {
-        let limit = SaleLimit::parse(query.limit)?;
-        let offset = SaleOffset::parse(query.offset)?;
+        let limit = Limit::parse(query.limit)?;
+        let offset = Offset::parse(query.offset)?;
         SaleDays::parse(query.days)?;
 
         Ok(Self { limit, offset })

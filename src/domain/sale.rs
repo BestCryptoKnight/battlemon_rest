@@ -1,10 +1,7 @@
-use super::sale_limit::SaleLimit;
-use super::sale_offset::SaleOffset;
-
 #[derive(Debug)]
 pub struct SaleFilter {
-    pub limit: SaleLimit,
-    pub offset: SaleOffset,
+    pub limit: crate::domain::Limit,
+    pub offset: crate::domain::Offset,
 }
 
 impl SaleFilter {

@@ -1,32 +1,24 @@
+pub use limit::*;
 pub use nft_token::*;
-pub use nft_token_limit::*;
-pub use nft_token_offset::*;
 pub use nft_token_token_id::*;
 pub use nft_token_user_id::*;
+pub use offset::*;
 pub use paid::*;
 pub use paid_days::*;
-pub use paid_limit::*;
-pub use paid_offset::*;
 pub use sale::*;
 pub use sale_days::*;
-pub use sale_limit::*;
-pub use sale_offset::*;
 
 use self::private::New;
 
+mod limit;
 mod nft_token;
-mod nft_token_limit;
-mod nft_token_offset;
 mod nft_token_token_id;
 mod nft_token_user_id;
+mod offset;
 mod paid;
 mod paid_days;
-mod paid_limit;
-mod paid_offset;
 mod sale;
 mod sale_days;
-mod sale_limit;
-mod sale_offset;
 
 pub(self) mod private {
     pub enum Local {}
@@ -89,54 +81,8 @@ macro_rules! impl_as_inner {
     };
 }
 
-macro_rules! impl_limit_for_domain {
-    ($t:ident) => {
-        impl Default for $t {
-            fn default() -> Self {
-                Self(100)
-            }
-        }
-
-        impl $t {
-            pub fn get(self) -> i64 {
-                self.0
-            }
-        }
-
-        impl crate::domain::New for $t {
-            fn new(value: i64) -> Self {
-                    Self(value)
-                }
-        }
-
-        impl crate::domain::ParseToPositiveInt for $t {
-            const ERROR: &'static str = "The limit value must be positive.";
-        }
-    };
-}
-
-macro_rules! impl_offset_for_domain {
-    ($t:ident) => {
-        impl crate::domain::New for $t {
-            fn new(offset: i64) -> Self {
-                Self(offset)
-            }
-        }
-
-        impl crate::domain::ParseToPositiveInt for $t {
-            const ERROR: &'static str = "The offset value must be positive.";
-        }
-
-        impl $t {
-            pub fn get(self) -> i64 {
-                self.0
-            }
-        }
-    };
-}
-
 #[rustfmt::skip]
-pub(crate) use {impl_into_inner, impl_as_inner, impl_limit_for_domain, impl_offset_for_domain};
+pub(crate) use {impl_into_inner, impl_as_inner};
 
 #[cfg(test)]
 pub mod helpers {
