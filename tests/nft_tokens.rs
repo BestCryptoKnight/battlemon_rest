@@ -37,7 +37,7 @@ async fn nft_tokens_success_with_valid_queries() {
         .unwrap();
     }
 
-    let valid_queries = [
+    let valid_queries_and_expected_lengths = [
         ("", 100),
         ("owner_id=alice.near", 50),
         ("owner_id=bob.near", 30),
@@ -49,15 +49,24 @@ async fn nft_tokens_success_with_valid_queries() {
         ("owner_id=danny.near&offset=10&limit=5", 5),
     ];
 
-    for query in valid_queries {
-        let response = app.get_nft_tokens(query.0).await;
-        assert!(response.status().is_success());
+    for (query, length) in valid_queries_and_expected_lengths {
+        let response = app.get_nft_tokens(query).await;
+        assert!(
+            response.status().is_success(),
+            "Response status for query `{}` doesn't equal `200`",
+            query
+        );
         let tokens: Vec<NftToken> = response
             .json()
             .await
             .expect("Couldn't parse response into `NftToken`");
 
-        assert_eq!(tokens.len(), query.1);
+        assert_eq!(
+            tokens.len(),
+            length,
+            "Length of deserialized `Vec<NftToken>` from response doesn't equal `{}`",
+            length
+        );
     }
 }
 
