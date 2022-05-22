@@ -80,9 +80,12 @@ pub async fn query_nft_tokens(
         FROM nft_tokens
         WHERE ($1::text IS null OR token_id = $1)
             AND ($2::text IS null OR owner_id = $2)
+        ORDER BY db_created_at LIMIT $3 OFFSET $4
         "#,
         filter.token_id(),
         filter.owner_id(),
+        filter.limit(),
+        filter.offset(),
     )
     .fetch_all(pool.get_ref())
     .await?;
