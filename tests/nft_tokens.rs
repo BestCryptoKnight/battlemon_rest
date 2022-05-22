@@ -1,6 +1,8 @@
+use fake::Fake;
 use sqlx::types::{chrono::Utc, Json, Uuid};
 use test_utils::{get_foo_lemon, tokens};
 
+use crate::dummies::{AliceNftToken, BobNftToken, DannyNftToken};
 use crate::helpers::assert_json_error;
 use battlemon_rest::routes::NftToken;
 use helpers::spawn_app;
@@ -8,6 +10,56 @@ use nft_models::ModelKind;
 
 mod dummies;
 mod helpers;
+
+#[tokio::test]
+async fn nft_tokens_success_with_valid_queries() {
+    let app = spawn_app().await;
+    let alice_tokens = (0..50).map(|_| AliceNftToken.fake());
+    let bob_tokens = (0..30).map(|_| BobNftToken.fake());
+    let danny_tokens = (0..20).map(|_| DannyNftToken.fake());
+    let tokens: Vec<dummies::NftToken> =
+        alice_tokens.chain(bob_tokens).chain(danny_tokens).collect();
+    for token in tokens {
+        sqlx::query!(
+            r#"
+            INSERT INTO nft_tokens (id, owner_id, token_id, media, model, db_created_at)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            "#,
+            token.id,
+            token.owner_id,
+            token.token_id,
+            token.media,
+            Json(token.model) as _,
+            token.db_created_at
+        )
+        .execute(&app.db_pool)
+        .await
+        .unwrap();
+    }
+
+    let valid_queries = [
+        ("", 100),
+        ("owner_id=alice.near", 50),
+        ("owner_id=bob.near", 30),
+        ("owner_id=danny.near", 20),
+        ("owner_id=danny.near&limit=10", 10),
+        ("owner_id=danny.near&limit=20", 20),
+        ("owner_id=danny.near&limit=30", 20),
+        ("owner_id=danny.near&offset=10", 10),
+        ("owner_id=danny.near&offset=10&limit=5", 5),
+    ];
+
+    for query in valid_queries {
+        let response = app.get_nft_tokens(query.0).await;
+        assert!(response.status().is_success());
+        let tokens: Vec<NftToken> = response
+            .json()
+            .await
+            .expect("Couldn't parse response into `NftToken`");
+
+        assert_eq!(tokens.len(), query.1);
+    }
+}
 
 #[tokio::test]
 async fn nft_tokens_fails_and_return_500_if_there_is_a_fatal_database_error() {
