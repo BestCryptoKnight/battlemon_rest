@@ -14,6 +14,10 @@ impl NftTokenFilter {
         self.limit.get()
     }
 
+    pub fn offset(&self) -> i64 {
+        self.offset.get()
+    }
+
     pub fn owner_id(&self) -> Option<&str> {
         self.owner_id.as_inner()
     }
