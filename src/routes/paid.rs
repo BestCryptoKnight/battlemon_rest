@@ -6,7 +6,7 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use crate::domain::{PaidDays, PaidFilter, PaidLimit, PaidOffset, ParseToPositiveInt};
+use crate::domain::{Limit, Offset, PaidDays, PaidFilter, ParseToPositiveInt};
 use crate::errors::PaidError;
 use crate::routes::Sale;
 
@@ -51,8 +51,8 @@ impl TryFrom<PaginationQuery> for PaidFilter {
     type Error = String;
 
     fn try_from(query: PaginationQuery) -> Result<Self, Self::Error> {
-        let limit = PaidLimit::parse(query.limit)?;
-        let offset = PaidOffset::parse(query.offset)?;
+        let limit = Limit::parse(query.limit)?;
+        let offset = Offset::parse(query.offset)?;
         let days = PaidDays::parse(query.days)?;
 
         Ok(Self {

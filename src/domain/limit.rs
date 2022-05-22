@@ -1,48 +1,48 @@
-use crate::domain::{New, ParseToPositiveInt};
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Limit(i64);
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct NftTokenLimit(i64);
-
-impl Default for NftTokenLimit {
+impl Default for Limit {
     fn default() -> Self {
         Self(100)
     }
 }
 
-impl NftTokenLimit {
+impl Limit {
     pub fn get(self) -> i64 {
         self.0
     }
 }
 
-impl New for NftTokenLimit {
+impl crate::domain::New for Limit {
     fn new(value: i64) -> Self {
         Self(value)
     }
 }
 
-impl ParseToPositiveInt for NftTokenLimit {
+impl crate::domain::ParseToPositiveInt for Limit {
     const ERROR: &'static str = "The limit value must be positive.";
 }
 
 #[cfg(test)]
 mod tests {
     use crate::domain::helpers::PositiveIntegersFixture;
+    use crate::domain::private::New;
+    use crate::domain::ParseToPositiveInt;
 
     use super::*;
 
     #[quickcheck_macros::quickcheck]
     fn valid_limit_are_parsed_successfully(valid_limit: PositiveIntegersFixture) -> bool {
-        NftTokenLimit::parse(valid_limit.0).is_ok()
+        Limit::parse(valid_limit.0).is_ok()
     }
 
     #[test]
     fn negative_limit_is_rejected() {
         let limit = Some(-10);
-        let actual = NftTokenLimit::parse(limit);
+        let actual = Limit::parse(limit);
         assert!(
             actual.is_err(),
-            "`NftTokenLimit` isn't `Err`, actual value is {:?}",
+            "`Limit` isn't `Err`, actual value is {:?}",
             actual
         );
     }
@@ -50,27 +50,27 @@ mod tests {
     #[test]
     fn none_limit_equals_default() {
         let limit = None;
-        let actual = NftTokenLimit::parse(limit);
+        let actual = Limit::parse(limit);
         assert!(
             actual.is_ok(),
-            "The actual `NftTokenLimit` isn't `Ok`, actual value is {:?}",
+            "The actual `Limit` isn't `Ok`, actual value is {:?}",
             actual
         );
         assert_eq!(
             actual,
-            Ok(NftTokenLimit::default()),
-            "The actual `NftTokenLimit` doesn't equal default value, actual value is {:?}",
+            Ok(Limit::default()),
+            "The actual `Limit` doesn't equal default value, actual value is {:?}",
             actual
         );
     }
 
     #[test]
     fn default_limit_is_100() {
-        let actual = NftTokenLimit::default();
+        let actual = Limit::default();
         assert_eq!(
             actual,
-            NftTokenLimit::new(100),
-            "The actual `NftTokenLimit` doesn't contain `100i64`, actual value is {:?}",
+            Limit::new(100),
+            "The actual `Limit` doesn't contain `100i64`, actual value is {:?}",
             actual
         );
     }
