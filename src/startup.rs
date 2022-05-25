@@ -58,7 +58,11 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error
             .route("/health_check", web::get().to(routes::health_check))
             .route("/sales", web::get().to(routes::sale))
             .route("/paid", web::get().to(routes::paid))
-            .route("/nft_tokens", web::get().to(routes::nft_tokens))
+            .service(
+                web::resource("nft_tokens")
+                    .route(web::get().to(routes::nft_tokens))
+                    .route(web::post().to(routes::insert_nft_token)),
+            )
             .app_data(pool.clone())
             .app_data(query_config)
     })
