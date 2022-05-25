@@ -1,4 +1,5 @@
 use fake::Fake;
+use serde_json::Value;
 use sqlx::types::{chrono::Utc, Json, Uuid};
 use test_utils::{get_foo_lemon, tokens};
 
