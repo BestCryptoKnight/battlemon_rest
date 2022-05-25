@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use reqwest::{Client, Response};
+use reqwest::{Body, Client, Response};
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 
@@ -37,6 +37,15 @@ impl TestApp {
             .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
     }
 
+    async fn post<T: Into<Body>>(&self, path: &str, body: T) -> Response {
+        Client::new()
+            .post(&format!("{}/{path}", self.address))
+            .body(body)
+            .send()
+            .await
+            .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
+    }
+
     pub async fn get_paid(&self, query: &str) -> Response {
         self.get("paid", query).await
     }
@@ -47,6 +56,10 @@ impl TestApp {
 
     pub async fn get_nft_tokens(&self, query: &str) -> Response {
         self.get("nft_tokens", query).await
+    }
+
+    pub async fn post_nft_token<T: Into<Body>>(&self, body: T) -> Response {
+        self.post("nft_tokens", body).await
     }
 }
 
