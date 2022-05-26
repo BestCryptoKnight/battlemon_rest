@@ -1,4 +1,4 @@
-use crate::domain::{AsInner, Limit, NftTokenDays, NftTokenOwnerId, NftTokenTokenId, Offset};
+use crate::domain::{AsInner, Limit, NftTokenOwnerId, NftTokenTokenId, Offset};
 
 pub struct NftTokenFilter {
     pub offset: Offset,
