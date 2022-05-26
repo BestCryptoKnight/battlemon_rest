@@ -1,24 +1,36 @@
 use serde::Deserialize;
 use sqlx::postgres::PgConnectOptions;
 
+/// Configuration for the server.
 #[derive(Deserialize, Clone)]
 pub struct ApplicationSettings {
+    /// The hostname of the server.
     pub host: String,
+    /// The port of the server.
     pub port: u16,
 }
-
+/// Configuration for the database.
+/// This is loaded from the `configuration.yaml` file.
 #[derive(Deserialize, Clone)]
 pub struct Settings {
+    /// The database connection string.
     pub database: DatabaseSettings,
+    /// The application settings.
     pub application: ApplicationSettings,
 }
 
 #[derive(Deserialize, Clone)]
+/// Configuration for the database.
 pub struct DatabaseSettings {
+    /// The database's username.
     pub username: String,
+    /// The database's password.
     pub password: String,
-    pub port: u16,
+    /// The database's port.
     pub host: String,
+    /// The database's name.
+    pub port: u16,
+    /// The database's hostname.
     pub database_name: String,
 }
 
