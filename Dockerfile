@@ -12,7 +12,7 @@ ENV SQLX_OFFLINE=true
 COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
-RUN cargo build --release --bin battlemon_rest
+RUN cargo build +nightly --release --bin battlemon_rest
 
 FROM debian:bullseye-slim AS runtime
 WORKDIR /app
