@@ -1,4 +1,5 @@
 use crate::helpers::{assert_json_error, spawn_app};
+use std::rc::Rc;
 
 use crate::dummies::AliceNftToken;
 use fake::Fake;
@@ -47,11 +48,20 @@ async fn insert_nft_token_fails_and_return_500_if_there_is_a_fatal_database_erro
         .await
         .unwrap();
     let response = app.post_nft_token(&token).await;
+    let status = response.status();
+    let body = response
+        .text()
+        .await
+        .expect("Couldn't get the response text");
+
     assert_eq!(
-        response.status(),
-        500,
-        "The API didn't return 500 Internal Server Error"
+        status, 500,
+        r#"The actual API didn't return 500 Internal Server Error.
+        The actual response has status code `{}`.
+        The actual response body: `{}`"#,
+        status, body,
     );
 
+    let response = app.post_nft_token(&token).await;
     assert_json_error(response).await
 }
