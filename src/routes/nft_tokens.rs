@@ -3,7 +3,7 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
 use nft_models::ModelKind;
@@ -24,7 +24,7 @@ pub struct NftTokenQuery {
     pub nft_trait: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NftToken {
     pub id: Uuid,
     pub owner_id: String,
@@ -69,6 +69,50 @@ pub async fn nft_tokens(
         .context("Failed to get the nft tokens data from database.")?;
 
     Ok(HttpResponse::Ok().json(nft_tokens))
+}
+
+#[tracing::instrument(name = "Insert nft tokens", skip(nft_token, pool))]
+pub async fn insert_nft_token(
+    web::Json(nft_token): web::Json<NftToken>,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, NftTokensError> {
+    let mut tx = pool.begin().await.context("Failed to start transaction.")?;
+    store_nft_token(nft_token, &mut tx)
+        .await
+        .context("Failed to insert the nft token data into database.")?;
+
+    Ok(HttpResponse::Created().finish())
+}
+
+#[tracing::instrument(name = "Store nft tokens to database", skip(tx))]
+pub async fn store_nft_token(
+    nft_token: NftToken,
+    tx: &mut Transaction<'_, Postgres>,
+) -> Result<(), anyhow::Error> {
+    sqlx::query_as!(
+        NftToken,
+        r#"
+        INSERT INTO nft_tokens (id, owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        ON CONFLICT (token_id) DO NOTHING
+        "#,
+        nft_token.id,
+        nft_token.owner_id,
+        nft_token.token_id,
+        nft_token.title,
+        nft_token.description,
+        nft_token.media,
+        nft_token.media_hash,
+        nft_token.copies,
+        nft_token.issued_at,
+        nft_token.expires_at,
+        Json(nft_token.model) as _,
+        Utc::now()
+    )
+    .execute(tx)
+    .await?;
+
+    Ok(())
 }
 
 #[tracing::instrument(name = "Query nft tokens from database", skip(filter, pool))]
