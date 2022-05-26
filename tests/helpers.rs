@@ -1,5 +1,6 @@
 use once_cell::sync::Lazy;
 use reqwest::{Body, Client, Response};
+use serde::Serialize;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 
@@ -37,10 +38,11 @@ impl TestApp {
             .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
     }
 
-    async fn post<T: Into<Body>>(&self, path: &str, body: T) -> Response {
+    async fn post_json<T: Serialize>(&self, path: &str, json: &T) -> Response {
         Client::new()
             .post(&format!("{}/{path}", self.address))
-            .body(body)
+            .header("Content-Type", "application/json")
+            .json(json)
             .send()
             .await
             .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
@@ -58,8 +60,8 @@ impl TestApp {
         self.get("nft_tokens", query).await
     }
 
-    pub async fn post_nft_token<T: Into<Body>>(&self, body: T) -> Response {
-        self.post("nft_tokens", body).await
+    pub async fn post_nft_token<T: Serialize>(&self, json: &T) -> Response {
+        self.post_json("nft_tokens", json).await
     }
 }
 
