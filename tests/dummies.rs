@@ -7,7 +7,7 @@ use fake::uuid::UUIDv4;
 use fake::{Dummy, Fake, Faker};
 use nft_models::{Lemon, ModelKind};
 use rand::Rng;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct Sale {
@@ -36,7 +36,7 @@ impl Dummy<Faker> for Sale {
     }
 }
 
-#[derive(Debug, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 pub struct NftToken {
     pub id: uuid::Uuid,
     pub owner_id: String,

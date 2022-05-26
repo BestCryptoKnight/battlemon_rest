@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use reqwest::{Body, Client, Response};
+use reqwest::{Client, Response};
 use serde::Serialize;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
