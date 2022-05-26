@@ -1,7 +1,8 @@
-use crate::helpers::spawn_app;
+use crate::helpers::{assert_json_error, spawn_app};
 
 use crate::dummies::AliceNftToken;
 use fake::Fake;
+use serde_json::json;
 
 mod dummies;
 mod helpers;
@@ -24,4 +25,15 @@ async fn insert_valid_nft_token_success() {
          The actual response has status code `{}` and body: `{}`",
         status, body,
     );
+}
+
+#[tokio::test]
+async fn insert_invalid_nft_token_fails() {
+    let app = spawn_app().await;
+    let token = json!({
+        "wrong": "token json"
+    });
+    let response = app.post_nft_token(&token).await;
+    assert_eq!(response.status(), 400, "Response status is not `400`");
+    assert_json_error(response).await;
 }
