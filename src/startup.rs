@@ -53,6 +53,14 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error
                 .into()
         });
 
+        let json_config = web::JsonConfig::default().error_handler(|err, _req| {
+            let json_body = serde_json::json!({
+                "error": err.to_string(),
+            });
+            error::InternalError::from_response(err, HttpResponse::BadRequest().json(json_body))
+                .into()
+        });
+
         actix_web::App::new()
             .wrap(tracing_actix_web::TracingLogger::default())
             .route("/health_check", web::get().to(routes::health_check))
@@ -65,6 +73,7 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error
             )
             .app_data(pool.clone())
             .app_data(query_config)
+            .app_data(json_config)
     })
     .listen(listener)?
     .run();
