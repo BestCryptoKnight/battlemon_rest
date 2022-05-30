@@ -30,8 +30,10 @@ pub struct JsonError {
 }
 
 impl JsonError {
-    pub fn new(error: String) -> Self {
-        Self { error }
+    pub fn new<T: Display>(error: T) -> Self {
+        Self {
+            error: error.to_string(),
+        }
     }
 }
 
@@ -39,7 +41,7 @@ pub fn default_error_response<T>(error: &T) -> HttpResponse
 where
     T: Debug + Display + ResponseError,
 {
-    let json_error = JsonError::new(error.to_string());
+    let json_error = JsonError::new(error);
     HttpResponse::build(error.status_code())
         .insert_header((header::CONTENT_TYPE, "application/json"))
         .json(json_error)
