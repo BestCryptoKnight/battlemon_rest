@@ -2,6 +2,8 @@ use actix_web::http::StatusCode;
 
 #[derive(thiserror::Error)]
 pub enum NftTokensError {
+    #[error("Authentication failed.")]
+    AuthError(#[source] anyhow::Error),
     #[error("{0}")]
     ValidationError(String),
     #[error(transparent)]
@@ -17,6 +19,7 @@ impl std::fmt::Debug for NftTokensError {
 impl actix_web::ResponseError for NftTokensError {
     fn status_code(&self) -> StatusCode {
         match self {
+            NftTokensError::AuthError(_) => StatusCode::UNAUTHORIZED,
             NftTokensError::ValidationError(_) => StatusCode::BAD_REQUEST,
             NftTokensError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
