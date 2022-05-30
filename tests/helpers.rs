@@ -58,8 +58,9 @@ impl TestApp {
     }
 
     pub async fn post_nft_token<T: Serialize>(&self, json: &T) -> Response {
+        let (username, password) = self.test_user().await;
         self.builder_post_json("nft_tokens", json)
-            .basic_auth(Uuid::new_v4().to_string(), Some(Uuid::new_v4().to_string()))
+            .basic_auth(username, Some(password))
             .send()
             .await
             .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
