@@ -1,6 +1,6 @@
 {
   "db": "PostgreSQL",
-  "1b23552b5a63b24d6476c204fb4560bab04642bf1ac7e0054f42f080253a6703": {
+  "03f6f5e493ceb87362a2c80a0b2b158fa837005aa2a3c7fd9fb4588ddebc8a53": {
     "describe": {
       "columns": [
         {
@@ -44,14 +44,38 @@
       ],
       "parameters": {
         "Left": [
+          "Timestamptz",
           "Int8",
           "Int8"
         ]
       }
     },
-    "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales ORDER BY id LIMIT $1 OFFSET $2;\n        "
+    "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales WHERE date >= $1 ORDER BY date OFFSET $2 LIMIT $3;\n        "
   },
-  "24d601172999301f910dd1020374101cde350a2724ab33a041ea6f01246dd582": {
+  "12c78b2afbd6ea35c2acbb8d2e4e908b456defa93dd06a3ce2d9a7050d98910c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Jsonb",
+          "Timestamptz"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO nft_tokens (id, owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)\n        ON CONFLICT (token_id) DO NOTHING\n        "
+  },
+  "5143612475f5ed5e6afc9cd45532a151ecab10934e8ae8177c93b3f7031d2c24": {
     "describe": {
       "columns": [
         {
@@ -131,14 +155,16 @@
       ],
       "parameters": {
         "Left": [
+          "Text",
+          "Text",
           "Int8",
           "Int8"
         ]
       }
     },
-    "query": "\n        SELECT id, owner_id, token_id, media, model as \"model: Json<ModelKind>\", db_created_at, copies, description, expires_at, issued_at, title, media_hash\n        FROM nft_tokens ORDER BY id LIMIT $1 OFFSET $2;\n        "
+    "query": "\n        SELECT id, owner_id, token_id, media, model as \"model: Json<ModelKind>\", db_created_at, copies, description, expires_at, issued_at, title, media_hash\n        FROM nft_tokens\n        WHERE ($1::text IS null OR token_id = $1)\n            AND ($2::text IS null OR owner_id = $2)\n        ORDER BY db_created_at LIMIT $3 OFFSET $4\n        "
   },
-  "bee5fc119ded93fec96c14264ea2cdfec365f35520641f9a76d052c76cd64bbf": {
+  "9481e03d85a44f220324915ac9a00788c277e0a00141a6254e4a16f723c02f6e": {
     "describe": {
       "columns": [
         {
@@ -182,10 +208,11 @@
       ],
       "parameters": {
         "Left": [
-          "Timestamptz"
+          "Int8",
+          "Int8"
         ]
       }
     },
-    "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales WHERE date >= $1;\n        "
+    "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales ORDER BY date LIMIT $1 OFFSET $2;\n        "
   }
 }
