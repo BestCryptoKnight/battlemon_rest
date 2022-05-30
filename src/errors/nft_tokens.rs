@@ -1,4 +1,7 @@
-use actix_web::http::StatusCode;
+use crate::errors::JsonError;
+use actix_web::http::header::HeaderValue;
+use actix_web::http::{header, StatusCode};
+use actix_web::HttpResponse;
 
 #[derive(thiserror::Error)]
 pub enum NftTokensError {
@@ -25,7 +28,20 @@ impl actix_web::ResponseError for NftTokensError {
         }
     }
 
-    fn error_response(&self) -> actix_web::HttpResponse {
-        crate::errors::default_error_response(self)
+    fn error_response(&self) -> HttpResponse {
+        match self {
+            NftTokensError::AuthError(_) => HttpResponse::Unauthorized()
+                .append_header((
+                    header::WWW_AUTHENTICATE,
+                    HeaderValue::from_static(r#"Basic realm="nft_token""#),
+                ))
+                .json(JsonError::new(self)),
+            NftTokensError::ValidationError(_) => {
+                HttpResponse::BadRequest().json(JsonError::new(self))
+            }
+            NftTokensError::UnexpectedError(_) => {
+                HttpResponse::InternalServerError().json(JsonError::new(self))
+            }
+        }
     }
 }
