@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use reqwest::{Client, Response};
+use reqwest::{Client, RequestBuilder, Response};
 use serde::Serialize;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
@@ -38,14 +38,11 @@ impl TestApp {
             .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
     }
 
-    async fn post_json<T: Serialize>(&self, path: &str, json: &T) -> Response {
+    fn builder_post_json<T: Serialize>(&self, path: &str, json: &T) -> RequestBuilder {
         Client::new()
             .post(&format!("{}/{path}", self.address))
             .header("Content-Type", "application/json")
             .json(json)
-            .send()
-            .await
-            .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
     }
 
     pub async fn get_paid(&self, query: &str) -> Response {
@@ -61,7 +58,11 @@ impl TestApp {
     }
 
     pub async fn post_nft_token<T: Serialize>(&self, json: &T) -> Response {
-        self.post_json("nft_tokens", json).await
+        self.builder_post_json("nft_tokens", json)
+            .basic_auth(Uuid::new_v4().to_string(), Some(Uuid::new_v4().to_string()))
+            .send()
+            .await
+            .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
     }
 }
 
