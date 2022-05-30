@@ -64,6 +64,15 @@ impl TestApp {
             .await
             .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
     }
+
+    pub async fn test_user(&self) -> (String, String) {
+        let row = sqlx::query!("SELECT username, password FROM users",)
+            .fetch_one(&self.db_pool)
+            .await
+            .expect("Failed to fetch test user");
+
+        (row.username, row.password)
+    }
 }
 
 pub async fn spawn_app() -> TestApp {
@@ -82,11 +91,29 @@ pub async fn spawn_app() -> TestApp {
     let address = format!("http://127.0.0.1:{}", application.port());
     let _ = tokio::spawn(application.run_until_stopped());
 
-    TestApp {
+    let ret = TestApp {
         address,
         db_name: config.database.database_name.clone(),
         db_pool: get_connection_pool(&config.database),
-    }
+    };
+    add_test_user(&ret.db_pool).await;
+
+    ret
+}
+
+async fn add_test_user(pool: &PgPool) {
+    sqlx::query!(
+        r#"
+        INSERT INTO users (user_id, username, password )
+        VALUES ($1, $2, $3)
+        "#,
+        Uuid::new_v4(),
+        Uuid::new_v4().to_string(),
+        Uuid::new_v4().to_string(),
+    )
+    .execute(pool)
+    .await
+    .expect("Failed to create test user");
 }
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
