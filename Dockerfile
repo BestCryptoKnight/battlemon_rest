@@ -1,7 +1,8 @@
 FROM lukemathwalker/cargo-chef:latest-rust-latest AS chef
 WORKDIR /app
 RUN apt-get update -y \
-    && apt-get install -y cmake pkg-config libssl-dev git clang
+    && apt-get install -y cmake pkg-config libssl-dev git clang \
+    && rustup toolchain install nightly
 
 FROM chef AS planner
 COPY . .
