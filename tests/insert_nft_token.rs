@@ -25,7 +25,7 @@ async fn requests_missing_authorization_are_rejected() {
         actual_status
     );
     assert_eq!(
-        r#"Basic realm="publish""#,
+        r#"Basic realm="nft_token""#,
         response.headers()["WWW-Authenticate"],
         r#"The WWW-Authenticate header must be set to `Basic realm="publish"`"#,
     );
