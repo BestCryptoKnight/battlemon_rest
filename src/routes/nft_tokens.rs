@@ -2,7 +2,7 @@ use actix_web::http::header::HeaderMap;
 use actix_web::{web, HttpRequest, HttpResponse};
 use anyhow::Context;
 use chrono::{DateTime, Utc};
-use secrecy::Secret;
+use secrecy::{ExposeSecret, Secret};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 use sqlx::{PgPool, Postgres, Transaction};
@@ -104,6 +104,24 @@ fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Erro
         password: Secret::new(password.to_string()),
     })
 }
+async fn validate_credentials(
+    credentials: Credentials,
+    pool: &PgPool,
+) -> Result<Uuid, NftTokensError> {
+    let row = sqlx::query!(
+        "SELECT user_id FROM users WHERE username = $1 AND password = $2",
+        credentials.username,
+        credentials.password.expose_secret(),
+    )
+    .fetch_optional(pool)
+    .await
+    .context("Failed to perform a query to validate auth credentials.")
+    .map_err(NftTokensError::AuthError)?;
+
+    row.map(|row| row.user_id)
+        .ok_or_else(|| anyhow::anyhow!("Invalid username or password."))
+        .map_err(NftTokensError::AuthError)
+}
 
 #[tracing::instrument(name = "Insert nft tokens", skip(nft_token, pool))]
 pub async fn insert_nft_token(
@@ -111,8 +129,10 @@ pub async fn insert_nft_token(
     request: HttpRequest,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, NftTokensError> {
-    let _credentials =
-        basic_authentication(request.headers()).map_err(NftTokensError::AuthError)?;
+    let credentials = basic_authentication(request.headers()).map_err(NftTokensError::AuthError)?;
+    tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
+    let user_id = validate_credentials(credentials, &pool).await?;
+    tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;
     store_nft_token(nft_token, &mut tx)
         .await
