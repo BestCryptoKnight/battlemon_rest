@@ -1,7 +1,5 @@
 use crate::helpers::{assert_json_error, spawn_app};
-use std::rc::Rc;
 
-use crate::dummies::AliceNftToken;
 use fake::Fake;
 use serde_json::json;
 
@@ -9,9 +7,34 @@ mod dummies;
 mod helpers;
 
 #[tokio::test]
+async fn requests_missing_authorization_are_rejected() {
+    let app = spawn_app().await;
+
+    let response = reqwest::Client::new()
+        .post(&format!("{}/nft_tokens", app.address))
+        .json(&dummies::AliceNftToken.fake::<dummies::NftToken>())
+        .send()
+        .await
+        .expect("Failed to execute request");
+
+    let actual_status = response.status();
+    assert_eq!(
+        actual_status,
+        reqwest::StatusCode::UNAUTHORIZED,
+        "The expected status code must be 401, actual is `{}`",
+        actual_status
+    );
+    assert_eq!(
+        r#"Basic realm="publish""#,
+        response.headers()["WWW-Authenticate"],
+        r#"The WWW-Authenticate header must be set to `Basic realm="publish"`"#,
+    );
+}
+
+#[tokio::test]
 async fn insert_valid_nft_token_success() {
     let app = spawn_app().await;
-    let token: dummies::NftToken = AliceNftToken.fake();
+    let token: dummies::NftToken = dummies::AliceNftToken.fake();
     let response = app.post_nft_token(&token).await;
 
     let status = response.status();
@@ -42,7 +65,7 @@ async fn insert_invalid_nft_token_rejects_and_returns_400_status() {
 #[tokio::test]
 async fn insert_nft_token_fails_and_return_500_if_there_is_a_fatal_database_error() {
     let app = spawn_app().await;
-    let token: dummies::NftToken = AliceNftToken.fake();
+    let token: dummies::NftToken = dummies::AliceNftToken.fake();
     sqlx::query!("ALTER TABLE nft_tokens DROP COLUMN owner_id;",)
         .execute(&app.db_pool)
         .await
