@@ -1,6 +1,8 @@
-use actix_web::{web, HttpResponse};
+use actix_web::http::header::HeaderMap;
+use actix_web::{web, HttpRequest, HttpResponse};
 use anyhow::Context;
 use chrono::{DateTime, Utc};
+use secrecy::Secret;
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 use sqlx::{PgPool, Postgres, Transaction};
@@ -71,11 +73,46 @@ pub async fn nft_tokens(
     Ok(HttpResponse::Ok().json(nft_tokens))
 }
 
+struct Credentials {
+    username: String,
+    password: Secret<String>,
+}
+
+fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Error> {
+    let header_value = headers
+        .get("Authorization")
+        .context("The `Authorization` header was missing.")?
+        .to_str()
+        .context("The `Authorization` header was not a valid UTF-8 string.")?;
+    let base64encoded_segment = header_value
+        .strip_prefix("Basic ")
+        .context("The authorization scheme was not `Basic`.")?;
+    let decoded_bytes = base64::decode_config(base64encoded_segment, base64::STANDARD)
+        .context("Failed to base64-decode `Basic` credentials.")?;
+    let decoded_credentials = String::from_utf8(decoded_bytes)
+        .context("The decoded credential string is not valid UTF-8")?;
+    let mut credentials = decoded_credentials.splitn(2, ':');
+    let username = credentials
+        .next()
+        .context("A username must be provided in `Basic` auth")?;
+    let password = credentials
+        .next()
+        .context("A password must be provided in `Basic` auth")?;
+
+    Ok(Credentials {
+        username: username.to_string(),
+        password: Secret::new(password.to_string()),
+    })
+}
+
 #[tracing::instrument(name = "Insert nft tokens", skip(nft_token, pool))]
 pub async fn insert_nft_token(
     web::Json(nft_token): web::Json<NftToken>,
+    request: HttpRequest,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, NftTokensError> {
+    let _credentials =
+        basic_authentication(request.headers()).map_err(NftTokensError::AuthError)?;
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;
     store_nft_token(nft_token, &mut tx)
         .await
