@@ -214,5 +214,26 @@
       }
     },
     "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales ORDER BY date LIMIT $1 OFFSET $2;\n        "
+  },
+  "a6125e1d693935473d360e960919d2df8ad447b5c3e6636adb0b6457251fc7a4": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT user_id FROM users WHERE username = $1 AND password = $2"
   }
 }

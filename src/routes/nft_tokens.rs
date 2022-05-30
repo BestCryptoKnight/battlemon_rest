@@ -104,6 +104,7 @@ fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Erro
         password: Secret::new(password.to_string()),
     })
 }
+
 async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
