@@ -1,3 +1,5 @@
+use argon2::password_hash::SaltString;
+use argon2::{Argon2, PasswordHasher};
 use once_cell::sync::Lazy;
 use reqwest::{Client, RequestBuilder, Response};
 use serde::Serialize;
@@ -26,6 +28,7 @@ pub struct TestApp {
     pub address: String,
     pub db_name: String,
     pub db_pool: PgPool,
+    test_user: TestUser,
 }
 
 #[allow(dead_code)]
@@ -58,21 +61,45 @@ impl TestApp {
     }
 
     pub async fn post_nft_token<T: Serialize>(&self, json: &T) -> Response {
-        let (username, password) = self.test_user().await;
         self.builder_post_json("nft_tokens", json)
-            .basic_auth(username, Some(password))
+            .basic_auth(&self.test_user.username, Some(&self.test_user.password))
             .send()
             .await
             .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
     }
+}
 
-    pub async fn test_user(&self) -> (String, String) {
-        let row = sqlx::query!("SELECT username, password FROM users",)
-            .fetch_one(&self.db_pool)
-            .await
-            .expect("Failed to fetch test user");
+pub struct TestUser {
+    pub user_id: Uuid,
+    pub username: String,
+    pub password: String,
+}
 
-        (row.username, row.password)
+impl TestUser {
+    pub fn generate() -> Self {
+        Self {
+            user_id: Uuid::new_v4(),
+            username: Uuid::new_v4().to_string(),
+            password: Uuid::new_v4().to_string(),
+        }
+    }
+
+    async fn store(&self, pool: &PgPool) {
+        let salt = SaltString::generate(&mut rand::thread_rng());
+        let password_hash = Argon2::default()
+            .hash_password(self.password.as_bytes(), &salt)
+            .unwrap()
+            .to_string();
+
+        sqlx::query!(
+            "INSERT INTO users (user_id, username, password_hash) VALUES ($1, $2, $3)",
+            self.user_id,
+            self.username,
+            password_hash
+        )
+        .execute(pool)
+        .await
+        .expect("Failed to store test user");
     }
 }
 
@@ -96,25 +123,11 @@ pub async fn spawn_app() -> TestApp {
         address,
         db_name: config.database.database_name.clone(),
         db_pool: get_connection_pool(&config.database),
+        test_user: TestUser::generate(),
     };
-    add_test_user(&ret.db_pool).await;
+    ret.test_user.store(&ret.db_pool).await;
 
     ret
-}
-
-async fn add_test_user(pool: &PgPool) {
-    sqlx::query!(
-        r#"
-        INSERT INTO users (user_id, username, password )
-        VALUES ($1, $2, $3)
-        "#,
-        Uuid::new_v4(),
-        Uuid::new_v4().to_string(),
-        Uuid::new_v4().to_string(),
-    )
-    .execute(pool)
-    .await
-    .expect("Failed to create test user");
 }
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
