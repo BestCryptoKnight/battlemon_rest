@@ -1,14 +1,14 @@
 use actix_web::http::header::HeaderMap;
 use actix_web::{web, HttpRequest, HttpResponse};
-use anyhow::Context;
+use anyhow::{anyhow, Context};
+use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use chrono::{DateTime, Utc};
+use nft_models::ModelKind;
 use secrecy::{ExposeSecret, Secret};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
-
-use nft_models::ModelKind;
 
 use crate::domain::{
     Limit, NftTokenDays, NftTokenFilter, NftTokenOwnerId, NftTokenTokenId, Offset, Parse,
@@ -106,22 +106,30 @@ fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Erro
 }
 
 async fn validate_credentials(
-    credentials: Credentials,
+    Credentials { username, password }: Credentials,
     pool: &PgPool,
 ) -> Result<Uuid, NftTokensError> {
-    let row = sqlx::query!(
-        "SELECT user_id FROM users WHERE username = $1 AND password = $2",
-        credentials.username,
-        credentials.password.expose_secret(),
-    )
-    .fetch_optional(pool)
-    .await
-    .context("Failed to perform a query to validate auth credentials.")
-    .map_err(NftTokensError::AuthError)?;
+    #[rustfmt::skip]
+    let row= sqlx::query!(
+        "SELECT user_id, password_hash FROM users WHERE username = $1",
+        username,
+        )
+        .fetch_optional(pool)
+        .await
+        .context("Failed to query the database for the user.")
+        .map_err(NftTokensError::UnexpectedError)?
+        .ok_or_else(|| NftTokensError::AuthError(anyhow!("Unknown username.")))?;
 
-    row.map(|row| row.user_id)
-        .ok_or_else(|| anyhow::anyhow!("Invalid username or password."))
-        .map_err(NftTokensError::AuthError)
+    let phc_password_hash = PasswordHash::new(&row.password_hash)
+        .context("Failed to parse hash in PHC string format.")
+        .map_err(NftTokensError::UnexpectedError)?;
+
+    Argon2::default()
+        .verify_password(password.expose_secret().as_bytes(), &phc_password_hash)
+        .context("Invalid password")
+        .map_err(NftTokensError::AuthError)?;
+
+    Ok(row.user_id)
 }
 
 #[tracing::instrument(name = "Insert nft tokens", skip(nft_token, pool))]
