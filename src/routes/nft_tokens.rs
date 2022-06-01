@@ -105,34 +105,49 @@ fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Erro
     })
 }
 
+#[tracing::instrument(name = "Validate credentials", skip(username, password, pool))]
 async fn validate_credentials(
     Credentials { username, password }: Credentials,
     pool: &PgPool,
 ) -> Result<Uuid, NftTokensError> {
-    #[rustfmt::skip]
-    let row= sqlx::query!(
-        "SELECT user_id, password_hash FROM users WHERE username = $1",
-        username,
-        )
-        .fetch_optional(pool)
+    let (user_id, password_hash) = get_stored_credentials(&username, pool)
         .await
-        .context("Failed to query the database for the user.")
         .map_err(NftTokensError::UnexpectedError)?
-        .ok_or_else(|| NftTokensError::AuthError(anyhow!("Unknown username.")))?;
+        .ok_or_else(|| NftTokensError::AuthError(anyhow!("Unknown username")))?;
 
-    let phc_password_hash = PasswordHash::new(&row.password_hash)
+    let phc_password_hash = PasswordHash::new(password_hash.expose_secret())
         .context("Failed to parse hash in PHC string format.")
         .map_err(NftTokensError::UnexpectedError)?;
 
-    Argon2::default()
-        .verify_password(password.expose_secret().as_bytes(), &phc_password_hash)
+    tracing::info_span!("Verify password hash")
+        .in_scope(|| {
+            Argon2::default()
+                .verify_password(password.expose_secret().as_bytes(), &phc_password_hash)
+        })
         .context("Invalid password")
         .map_err(NftTokensError::AuthError)?;
 
-    Ok(row.user_id)
+    Ok(user_id)
 }
 
-#[tracing::instrument(name = "Insert nft tokens", skip(nft_token, pool))]
+#[tracing::instrument(name = "Get stored credentials", skip(username, pool))]
+async fn get_stored_credentials(
+    username: &str,
+    pool: &PgPool,
+) -> Result<Option<(Uuid, Secret<String>)>, anyhow::Error> {
+    let row = sqlx::query!(
+        "SELECT user_id, password_hash FROM users WHERE username = $1",
+        username,
+    )
+    .fetch_optional(pool)
+    .await
+    .context("Failed to perform a query to retrieve stored credentials.")?
+    .map(|r| (r.user_id, Secret::new(r.password_hash)));
+
+    Ok(row)
+}
+
+#[tracing::instrument(name = "Insert nft tokens", skip(nft_token, request, pool))]
 pub async fn insert_nft_token(
     web::Json(nft_token): web::Json<NftToken>,
     request: HttpRequest,
