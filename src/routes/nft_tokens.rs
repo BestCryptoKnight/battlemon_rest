@@ -111,16 +111,28 @@ async fn validate_credentials(
     Credentials { username, password }: Credentials,
     pool: &PgPool,
 ) -> Result<Uuid, NftTokensError> {
-    let (user_id, password_hash) = get_stored_credentials(&username, pool)
+    let mut user_id = None;
+    // prevent time attack
+    let mut password_hash = Secret::new(
+        "$argon2id$v=19$m=15000,t=2,p=1$\
+        gZiV/M1gPc22ElAH/Jh1Hw$\
+        CWOrkoo7oJBQ/iyh7uJ0LO2aLEfrHwTWllSAxT0zRno"
+            .to_string(),
+    );
+
+    if let Some((stored_user_id, stored_password_hash)) = get_stored_credentials(&username, pool)
         .await
         .map_err(NftTokensError::UnexpectedError)?
-        .ok_or_else(|| NftTokensError::AuthError(anyhow!("Unknown username")))?;
+    {
+        user_id = Some(stored_user_id);
+        password_hash = stored_password_hash;
+    }
 
     spawn_blocking_with_tracing(move || verify_password_hash(password_hash, password))
         .await
         .context("Failed to spawn blocking task.")??;
 
-    Ok(user_id)
+    user_id.ok_or_else(|| NftTokensError::AuthError(anyhow!("Unknown username.")))
 }
 
 #[tracing::instrument(
