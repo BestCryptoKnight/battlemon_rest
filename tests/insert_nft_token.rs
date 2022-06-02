@@ -20,15 +20,21 @@ async fn non_existing_user_is_rejected() {
         .send()
         .await
         .expect("Failed to send request");
-    let status = response.status();
+
+    let actual_status = response.status();
     assert_eq!(
-        status,
+        actual_status,
         reqwest::StatusCode::UNAUTHORIZED,
-        "The actual status is {}, expected status is `401`",
-        status.as_u16()
+        "The expected status code must be 401, actual is `{}`",
+        actual_status
+    );
+    assert_eq!(
+        r#"Basic realm="nft_token""#,
+        response.headers()["WWW-Authenticate"],
+        r#"The WWW-Authenticate header must be set to `Basic realm="publish"`"#,
     );
 
-    assert_json_error(response);
+    assert_json_error(response).await;
 }
 
 #[tokio::test]
