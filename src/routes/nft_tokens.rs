@@ -115,19 +115,35 @@ async fn validate_credentials(
         .map_err(NftTokensError::UnexpectedError)?
         .ok_or_else(|| NftTokensError::AuthError(anyhow!("Unknown username")))?;
 
-    let phc_password_hash = PasswordHash::new(password_hash.expose_secret())
-        .context("Failed to parse hash in PHC string format.")
-        .map_err(NftTokensError::UnexpectedError)?;
-
-    tracing::info_span!("Verify password hash")
-        .in_scope(|| {
-            Argon2::default()
-                .verify_password(password.expose_secret().as_bytes(), &phc_password_hash)
-        })
+    tokio::task::spawn_blocking(move || verify_password_hash(password_hash, password))
+        .await
+        .context("Failed to spawn blocking task.")
+        .map_err(NftTokensError::UnexpectedError)?
         .context("Invalid password")
         .map_err(NftTokensError::AuthError)?;
 
     Ok(user_id)
+}
+
+#[tracing::instrument(
+    name = "Verify password hash",
+    skip(expected_password_hash, password_candidate)
+)]
+fn verify_password_hash(
+    expected_password_hash: Secret<String>,
+    password_candidate: Secret<String>,
+) -> Result<(), NftTokensError> {
+    let phc_password_hash = PasswordHash::new(expected_password_hash.expose_secret())
+        .context("Failed to parse hash in PHC string format.")
+        .map_err(NftTokensError::UnexpectedError)?;
+
+    Argon2::default()
+        .verify_password(
+            password_candidate.expose_secret().as_bytes(),
+            &phc_password_hash,
+        )
+        .context("Invalid password")
+        .map_err(NftTokensError::AuthError)
 }
 
 #[tracing::instrument(name = "Get stored credentials", skip(username, pool))]
