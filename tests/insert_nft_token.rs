@@ -31,7 +31,7 @@ async fn non_existing_user_is_rejected() {
     assert_eq!(
         r#"Basic realm="nft_token""#,
         response.headers()["WWW-Authenticate"],
-        r#"The WWW-Authenticate header must be set to `Basic realm="publish"`"#,
+        r#"The WWW-Authenticate header must be set to `Basic realm="nft_token"`"#,
     );
 
     assert_json_error(response).await;
@@ -58,7 +58,7 @@ async fn requests_missing_authorization_are_rejected() {
     assert_eq!(
         r#"Basic realm="nft_token""#,
         response.headers()["WWW-Authenticate"],
-        r#"The WWW-Authenticate header must be set to `Basic realm="publish"`"#,
+        r#"The WWW-Authenticate header must be set to `Basic realm="nft_token"`"#,
     );
 
     assert_json_error(response).await;
