@@ -2,9 +2,34 @@ use crate::helpers::{assert_json_error, spawn_app};
 
 use fake::Fake;
 use serde_json::json;
+use uuid::Uuid;
 
 mod dummies;
 mod helpers;
+
+#[tokio::test]
+async fn non_existing_user_is_rejected() {
+    let app = spawn_app().await;
+    let username = Uuid::new_v4().to_string();
+    let password = Uuid::new_v4().to_string();
+
+    let response = reqwest::Client::new()
+        .post(&format!("{}/nft_tokens", &app.address))
+        .basic_auth(username, Some(password))
+        .json(&dummies::AliceNftToken.fake::<dummies::NftToken>())
+        .send()
+        .await
+        .expect("Failed to send request");
+    let status = response.status();
+    assert_eq!(
+        status,
+        reqwest::StatusCode::UNAUTHORIZED,
+        "The actual status is {}, expected status is `401`",
+        status.as_u16()
+    );
+
+    assert_json_error(response);
+}
 
 #[tokio::test]
 async fn requests_missing_authorization_are_rejected() {
@@ -29,6 +54,8 @@ async fn requests_missing_authorization_are_rejected() {
         response.headers()["WWW-Authenticate"],
         r#"The WWW-Authenticate header must be set to `Basic realm="publish"`"#,
     );
+
+    assert_json_error(response).await;
 }
 
 #[tokio::test]
