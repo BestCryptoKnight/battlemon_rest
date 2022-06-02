@@ -15,6 +15,7 @@ use crate::domain::{
     ParseToPositiveInt,
 };
 use crate::errors::NftTokensError;
+use crate::telemetry::spawn_blocking_with_tracing;
 
 #[derive(Debug, Deserialize)]
 pub struct NftTokenQuery {
@@ -115,12 +116,9 @@ async fn validate_credentials(
         .map_err(NftTokensError::UnexpectedError)?
         .ok_or_else(|| NftTokensError::AuthError(anyhow!("Unknown username")))?;
 
-    tokio::task::spawn_blocking(move || verify_password_hash(password_hash, password))
+    spawn_blocking_with_tracing(move || verify_password_hash(password_hash, password))
         .await
-        .context("Failed to spawn blocking task.")
-        .map_err(NftTokensError::UnexpectedError)?
-        .context("Invalid password")
-        .map_err(NftTokensError::AuthError)?;
+        .context("Failed to spawn blocking task.")??;
 
     Ok(user_id)
 }
