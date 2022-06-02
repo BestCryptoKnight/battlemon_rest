@@ -8,6 +8,40 @@ mod dummies;
 mod helpers;
 
 #[tokio::test]
+async fn invalid_password_is_rejected() {
+    let app = spawn_app().await;
+    let username = &app.test_user.username;
+    let password = Uuid::new_v4().to_string();
+    assert_ne!(
+        app.test_user.password, password,
+        "Passwords should be different"
+    );
+
+    let response = reqwest::Client::new()
+        .post(&format!("{}/nft_tokens", &app.address))
+        .basic_auth(username, Some(password))
+        .json(&dummies::AliceNftToken.fake::<dummies::NftToken>())
+        .send()
+        .await
+        .expect("Failed to send request");
+
+    let actual_status = response.status();
+    assert_eq!(
+        actual_status,
+        reqwest::StatusCode::UNAUTHORIZED,
+        "The expected status code must be 401, actual is `{}`",
+        actual_status
+    );
+    assert_eq!(
+        r#"Basic realm="nft_token""#,
+        response.headers()["WWW-Authenticate"],
+        r#"The WWW-Authenticate header must be set to `Basic realm="nft_token"`"#,
+    );
+
+    assert_json_error(response).await;
+}
+
+#[tokio::test]
 async fn non_existing_user_is_rejected() {
     let app = spawn_app().await;
     let username = Uuid::new_v4().to_string();
