@@ -186,7 +186,7 @@ pub async fn insert_nft_token(
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;
     store_nft_token(nft_token, &mut tx)
         .await
-        .context("Failed to insert the nft token data into database.")?;
+        .context("Failed to insert the nft token data into the database.")?;
 
     Ok(HttpResponse::Created().finish())
 }
