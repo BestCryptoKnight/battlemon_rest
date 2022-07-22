@@ -1,10 +1,10 @@
-use std::lazy::SyncLazy;
+use once_cell::sync::Lazy;
 
 use regex::Regex;
 
 use crate::domain::Parse;
 
-static RE: SyncLazy<Regex> = SyncLazy::new(|| {
+static RE: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$"#)
         .expect("Couldn't compile regexp expression")
 });
