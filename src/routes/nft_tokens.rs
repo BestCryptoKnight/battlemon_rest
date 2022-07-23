@@ -2,7 +2,7 @@ use actix_web::http::header::HeaderMap;
 use actix_web::{web, HttpRequest, HttpResponse};
 use anyhow::{anyhow, Context};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use nft_models::ModelKind;
 use secrecy::{ExposeSecret, Secret};
 use serde::{Deserialize, Serialize};
@@ -29,9 +29,8 @@ pub struct NftTokenQuery {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NftToken {
-    pub id: Uuid,
-    pub owner_id: String,
     pub token_id: String,
+    pub owner_id: String,
     pub title: Option<String>,
     pub description: Option<String>,
     pub media: String,
@@ -40,7 +39,6 @@ pub struct NftToken {
     pub issued_at: Option<String>,
     pub expires_at: Option<String>,
     pub model: Json<ModelKind>,
-    pub db_created_at: DateTime<Utc>,
 }
 
 impl TryFrom<NftTokenQuery> for NftTokenFilter {
@@ -187,7 +185,9 @@ pub async fn insert_nft_token(
     store_nft_token(nft_token, &mut tx)
         .await
         .context("Failed to insert the nft token data into the database.")?;
-
+    tx.commit()
+        .await
+        .context("Failed to commit SQL transaction to store a new subscriber.")?;
     Ok(HttpResponse::Created().finish())
 }
 
@@ -203,7 +203,7 @@ pub async fn store_nft_token(
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         ON CONFLICT (token_id) DO NOTHING
         "#,
-        nft_token.id,
+        uuid::Uuid::new_v4(),
         nft_token.owner_id,
         nft_token.token_id,
         nft_token.title,
@@ -230,7 +230,7 @@ pub async fn query_nft_tokens(
     let rows= sqlx::query_as!(
         NftToken,
         r#"
-        SELECT id, owner_id, token_id, media, model as "model: Json<ModelKind>", db_created_at, copies, description, expires_at, issued_at, title, media_hash
+        SELECT token_id, owner_id, media, model as "model: Json<ModelKind>", copies, description, expires_at, issued_at, title, media_hash
         FROM nft_tokens
         WHERE ($1::text IS null OR token_id = $1)
             AND ($2::text IS null OR owner_id = $2)
