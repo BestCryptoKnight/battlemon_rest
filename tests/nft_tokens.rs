@@ -4,7 +4,6 @@ use sqlx::types::{chrono::Utc, Json, Uuid};
 use crate::dummies::{AliceNftToken, BobNftToken, DannyNftToken};
 use battlemon_rest::routes::NftToken;
 use helpers::{assert_json_error, spawn_app};
-use nft_models::ModelKind;
 
 mod dummies;
 mod helpers;
@@ -36,7 +35,7 @@ async fn nft_tokens_return_400_with_invalid_queries() {
         assert_eq!(
             response.status(),
             400,
-            "Response status is not 400 for query `{}`",
+            "Response status is not 400 for the query `{}`",
             query
         );
         assert_json_error(response).await;
@@ -57,12 +56,12 @@ async fn nft_tokens_success_with_valid_queries() {
             INSERT INTO nft_tokens (id, owner_id, token_id, media, model, db_created_at)
             VALUES ($1, $2, $3, $4, $5, $6)
             "#,
-            token.id,
+            Uuid::new_v4(),
             token.owner_id,
             token.token_id,
             token.media,
             Json(token.model) as _,
-            token.db_created_at
+            Utc::now()
         )
         .execute(&app.db_pool)
         .await
@@ -96,7 +95,7 @@ async fn nft_tokens_success_with_valid_queries() {
         assert_eq!(
             tokens.len(),
             length,
-            "Length of deserialized `Vec<NftToken>` from response doesn't equal `{}`",
+            "The length of deserialized `Vec<NftToken>` from response doesn't equal `{}`",
             length
         );
     }
@@ -130,12 +129,12 @@ async fn nft_tokens_for_valid_query_by_token_id_returns_200() {
             INSERT INTO nft_tokens (id, owner_id, token_id, media, model, db_created_at)
             VALUES ($1, $2, $3, $4, $5, $6)
             "#,
-            token.id,
+            Uuid::new_v4(),
             token.owner_id,
             token.token_id,
             token.media,
             Json(token.model) as _,
-            token.db_created_at
+            Utc::now()
         )
         .execute(&app.db_pool)
         .await
