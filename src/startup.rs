@@ -64,8 +64,12 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error
         actix_web::App::new()
             .wrap(tracing_actix_web::TracingLogger::default())
             .route("/health_check", web::get().to(routes::health_check))
-            .route("/sales", web::get().to(routes::sale))
             .route("/paid", web::get().to(routes::paid))
+            .service(
+                web::resource("sales")
+                    .route(web::get().to(routes::sale))
+                    .route(web::post().to(routes::insert_sale)),
+            )
             .service(
                 web::resource("nft_tokens")
                     .route(web::get().to(routes::nft_tokens))

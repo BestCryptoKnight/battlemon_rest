@@ -1,9 +1,9 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
 use crate::domain::{Limit, Offset, ParseToPositiveInt, SaleDays, SaleFilter};
@@ -11,7 +11,7 @@ use crate::errors::SaleError;
 
 use super::PaginationQuery;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Sale {
     pub id: Uuid,
     pub prev_owner: String,
@@ -62,4 +62,45 @@ pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>,
     .await?;
 
     Ok(rows)
+}
+
+#[tracing::instrument(name = "Insert sale", skip(sale, _request, pool))]
+pub async fn insert_sale(
+    web::Json(sale): web::Json<Sale>,
+    _request: HttpRequest,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, SaleError> {
+    let mut tx = pool.begin().await.context("Failed to start transaction.")?;
+    store_sale(sale, &mut tx)
+        .await
+        .context("Failed to insert the nft token data into the database.")?;
+    tx.commit()
+        .await
+        .context("Failed to commit SQL transaction to store a new subscriber.")?;
+    Ok(HttpResponse::Created().finish())
+}
+
+#[tracing::instrument(name = "Store sale to database", skip(tx))]
+pub async fn store_sale(
+    sale: Sale,
+    tx: &mut Transaction<'_, Postgres>,
+) -> Result<(), anyhow::Error> {
+    sqlx::query_as!(
+        Sale,
+        r#"
+        INSERT INTO sales (id, prev_owner, curr_owner, token_id, price, date)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (token_id) DO NOTHING
+        "#,
+        Uuid::new_v4(),
+        sale.prev_owner,
+        sale.curr_owner,
+        sale.token_id,
+        sale.price,
+        Utc::now()
+    )
+    .execute(tx)
+    .await?;
+
+    Ok(())
 }
