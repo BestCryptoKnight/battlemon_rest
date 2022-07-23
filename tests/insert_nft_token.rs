@@ -1,5 +1,7 @@
 use crate::helpers::{assert_json_error, spawn_app};
+use anyhow::Context;
 
+use battlemon_rest::routes::NftToken;
 use fake::Fake;
 use serde_json::json;
 use uuid::Uuid;
@@ -99,7 +101,7 @@ async fn requests_missing_authorization_are_rejected() {
 }
 
 #[tokio::test]
-async fn insert_valid_nft_token_success() {
+async fn insert_valid_nft_token_success() -> anyhow::Result<()> {
     let app = spawn_app().await;
     let token: dummies::NftToken = dummies::AliceNftToken.fake();
     let response = app.post_nft_token(&token).await;
@@ -108,14 +110,25 @@ async fn insert_valid_nft_token_success() {
     let body = response
         .text()
         .await
-        .expect("Couldn't get the response text");
+        .context("Couldn't get the response text")?;
 
     assert_eq!(
         status, 201,
-        "The expected response doesn't have `201` status code.\
-         The actual response has status code `{}` and body: `{}`",
+        "The expected response doesn't have `201` status code.\n 
+        The actual response has status code `{}` and body: `{}`",
         status, body,
     );
+
+    let response: Vec<NftToken> = app
+        .get_nft_tokens(&format!("token_id={}", token.token_id))
+        .await
+        .json()
+        .await?;
+    assert_eq!(
+        response[0].token_id, token.token_id,
+        "The inserted token id doesn't match the returned token id"
+    );
+    Ok(())
 }
 
 #[tokio::test]
