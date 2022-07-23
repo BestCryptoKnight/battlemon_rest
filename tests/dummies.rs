@@ -9,7 +9,7 @@ use nft_models::{Lemon, ModelKind};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct Sale {
     pub id: uuid::Uuid,
     pub prev_owner: String,
@@ -38,31 +38,27 @@ impl Dummy<Faker> for Sale {
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 pub struct NftToken {
-    pub id: uuid::Uuid,
     pub owner_id: String,
     pub token_id: String,
     pub media: String,
     pub model: ModelKind,
-    pub db_created_at: chrono::DateTime<chrono::Utc>,
 }
 
 pub struct AliceNftToken;
 
 impl Dummy<AliceNftToken> for NftToken {
     fn dummy_with_rng<R: Rng + ?Sized>(_: &AliceNftToken, rng: &mut R) -> Self {
-        let probability = fake::vec![u8; 4]
+        let traits_config = fake::vec![u8; 4]
             .try_into()
-            .expect("Couldn't convert to array with length 4");
-        let model = ModelKind::Lemon(Lemon::from_random(&probability));
+            .expect("Couldn't convert to the array with length 4");
+        let model = ModelKind::Lemon(Lemon::from_random(&traits_config));
         let token_id = rng.gen::<u64>().to_string();
 
         Self {
-            id: UUIDv4.fake::<uuid::Uuid>(),
             owner_id: "alice.near".to_string(),
             token_id,
             media: Geohash(24).fake(),
             model,
-            db_created_at: DateTime(EN).fake(),
         }
     }
 }
