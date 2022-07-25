@@ -75,95 +75,6 @@
     },
     "query": "\n        INSERT INTO nft_tokens (id, owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)\n        ON CONFLICT (token_id) DO NOTHING\n        "
   },
-  "5143612475f5ed5e6afc9cd45532a151ecab10934e8ae8177c93b3f7031d2c24": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "owner_id",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "token_id",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "media",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "model: Json<ModelKind>",
-          "ordinal": 4,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "db_created_at",
-          "ordinal": 5,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "copies",
-          "ordinal": 6,
-          "type_info": "Text"
-        },
-        {
-          "name": "description",
-          "ordinal": 7,
-          "type_info": "Text"
-        },
-        {
-          "name": "expires_at",
-          "ordinal": 8,
-          "type_info": "Text"
-        },
-        {
-          "name": "issued_at",
-          "ordinal": 9,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 10,
-          "type_info": "Text"
-        },
-        {
-          "name": "media_hash",
-          "ordinal": 11,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Int8",
-          "Int8"
-        ]
-      }
-    },
-    "query": "\n        SELECT id, owner_id, token_id, media, model as \"model: Json<ModelKind>\", db_created_at, copies, description, expires_at, issued_at, title, media_hash\n        FROM nft_tokens\n        WHERE ($1::text IS null OR token_id = $1)\n            AND ($2::text IS null OR owner_id = $2)\n        ORDER BY db_created_at LIMIT $3 OFFSET $4\n        "
-  },
   "9481e03d85a44f220324915ac9a00788c277e0a00141a6254e4a16f723c02f6e": {
     "describe": {
       "columns": [
@@ -215,6 +126,83 @@
     },
     "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales ORDER BY date LIMIT $1 OFFSET $2;\n        "
   },
+  "98f3f8c6373dfc78b9c41f76a55e263d257f3f76e757e92ac6f2dd0305e7a11b": {
+    "describe": {
+      "columns": [
+        {
+          "name": "token_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "owner_id",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "media",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "model: Json<ModelKind>",
+          "ordinal": 3,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "copies",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "expires_at",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "issued_at",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 8,
+          "type_info": "Text"
+        },
+        {
+          "name": "media_hash",
+          "ordinal": 9,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "\n        SELECT token_id, owner_id, media, model as \"model: Json<ModelKind>\", copies, description, expires_at, issued_at, title, media_hash\n        FROM nft_tokens\n        WHERE ($1::text IS null OR token_id = $1)\n            AND ($2::text IS null OR owner_id = $2)\n        ORDER BY db_created_at LIMIT $3 OFFSET $4\n        "
+  },
   "aa1048e917e7918b479b36c5b9c3947146c499a1d4d7a85c7c1bcdddce57e219": {
     "describe": {
       "columns": [
@@ -240,5 +228,22 @@
       }
     },
     "query": "SELECT user_id, password_hash FROM users WHERE username = $1"
+  },
+  "f3c717a79f647c3488cb68fb6351be295623d1cd58e1a24057671e24bc6513b1": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Text",
+          "Text",
+          "Numeric",
+          "Timestamptz"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO sales (id, prev_owner, curr_owner, token_id, price, date)\n        VALUES ($1, $2, $3, $4, $5, $6)\n        ON CONFLICT (token_id) DO NOTHING\n        "
   }
 }
