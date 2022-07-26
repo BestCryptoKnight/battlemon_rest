@@ -4,4 +4,4 @@ COPY ./scripts/init_db_cluster.sh ./
 
 RUN chmod +x init_db_cluster.sh
 
-ENTRYPOINT ["./entry_point.sh"]
+ENTRYPOINT ["./init_db_cluster.sh"]
