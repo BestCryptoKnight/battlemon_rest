@@ -3,7 +3,8 @@ WORKDIR /prj
 
 RUN apt update -y \
     &&  apt install -y --no-install-recommends \
-        openssl \
+    pkg-config \
+    openssl \
     && cargo install --version=0.5.7 sqlx-cli --no-default-features --features postgres
 
 COPY ./migrations ./migrations
