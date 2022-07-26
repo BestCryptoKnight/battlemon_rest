@@ -15,15 +15,18 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo +nightly build --release --bin battlemon_rest
 
-FROM debian:bullseye-slim AS runtime
+FROM rust:1.62.1-slim-bullseye AS runtime
 WORKDIR /app
 RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends openssl jq \
+    && apt-get install -y --no-install-recommends \
+      postgres-client \
+      openssl \
+      jq \
     && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/target/release/battlemon_rest /app/scripts/entry_point.sh ./
+COPY --from=builder /app/target/release/battlemon_rest /app/scripts/* ./
 COPY configuration ./configuration
 
 RUN chmod +x entry_point.sh
