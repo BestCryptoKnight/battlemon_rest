@@ -12,6 +12,14 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: docker/rest.Dockerfile
+            image: ${{ env.REGISTRY }}/rest:master
+          - dockerfile: docker/migrator.Dockerfile
+            image: ${{ env.REGISTRY }}/migrator:master
     permissions:
       contents: read
       packages: write
@@ -46,20 +54,8 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./docker/rest.Dockerfile
+          file: ${{ matrix.Dockerfile }}
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build and push Docker image with Migrator service
-        uses: docker/build-push-action@7f9d37fa544684fb73bfe4835ed7214c255ce02b
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: .
-          file: ./docker/migrator.Dockerfile
-          platforms: linux/amd64
-          push: true
-          #          tags: ${{ steps.meta.outputs.tags }}
-          tags: migrator
           labels: ${{ steps.meta.outputs.labels }}
