@@ -17,9 +17,9 @@ jobs:
       matrix:
         include:
           - dockerfile: docker/rest.Dockerfile
-            image: ghcr.io/battlemon-project/rest:master
+            image: ghcr.io/battlemon-project/rest
           - dockerfile: docker/migrator.Dockerfile
-            image: ghcr.io/battlemon-project/migrator:master
+            image: ghcr.io/battlemon-project/migrator
     permissions:
       contents: read
       packages: write
