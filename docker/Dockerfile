@@ -15,11 +15,10 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo +nightly build --release --bin battlemon_rest
 
-FROM rust:1.62.1-slim-bullseye AS runtime
+FROM debian:bullseye-20220711-slim AS runtime
 WORKDIR /app
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
-      postgresql-client \
       openssl \
       jq \
     && apt-get autoremove -y \
