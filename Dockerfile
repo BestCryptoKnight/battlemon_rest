@@ -19,7 +19,7 @@ FROM rust:1.62.1-slim-bullseye AS runtime
 WORKDIR /app
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
-      postgres-client \
+      postgresql-client \
       openssl \
       jq \
     && apt-get autoremove -y \
