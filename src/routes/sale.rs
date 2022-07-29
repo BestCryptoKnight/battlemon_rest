@@ -66,7 +66,7 @@ pub async fn sale(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, SaleError> {
     let filter = filter.try_into().map_err(SaleError::ValidationError)?;
-    let sales = query_sales(filter, &pool)
+    let sales = query_sales(&filter, &pool)
         .await
         .context("Failed to get the sale's data from the database.")?;
 
@@ -74,13 +74,16 @@ pub async fn sale(
 }
 
 #[tracing::instrument(name = "Query sales from database", skip(filter, pool))]
-pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>, anyhow::Error> {
+pub async fn query_sales(filter: &SaleFilter, pool: &PgPool) -> Result<Vec<Sale>, anyhow::Error> {
     let rows = sqlx::query_as!(
         Sale,
         r#"
         SELECT id, prev_owner, curr_owner, token_id, price, date
-        FROM sales ORDER BY id LIMIT $1 OFFSET $2;
+        FROM sales
+        WHERE ($1::text IS null OR token_id = $1)
+        ORDER BY id LIMIT $2 OFFSET $3;
         "#,
+        filter.token_id(),
         filter.limit() + 1,
         filter.offset()
     )
