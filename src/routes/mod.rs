@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 pub use health_check::*;
 pub use nft_tokens::*;
@@ -23,5 +23,17 @@ fn build_report_for_rows<T>(rows: &[T], limit: i64) -> (&[T], bool) {
         (rows, true)
     } else {
         (&rows[..limit], false)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct RowsJsonReport<T> {
+    pub rows: T,
+    pub end: bool,
+}
+
+impl<T> RowsJsonReport<T> {
+    pub fn new(rows: T, end: bool) -> Self {
+        Self { rows, end }
     }
 }
