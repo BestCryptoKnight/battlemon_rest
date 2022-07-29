@@ -1,11 +1,11 @@
-use crate::domain::{AsInner, Limit, NftTokenOwnerId, NftTokenTokenId, Offset};
+use crate::domain::{AsInner, Limit, NftTokenOwnerId, TokenId, Offset};
 
 #[derive(Debug, Clone)]
 pub struct NftTokenFilter {
     pub offset: Offset,
     pub limit: Limit,
     pub owner_id: NftTokenOwnerId,
-    pub token_id: NftTokenTokenId,
+    pub token_id: TokenId,
     // pub by_token_trait: TokenTrait,
 }
 
