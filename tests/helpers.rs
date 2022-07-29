@@ -96,8 +96,7 @@ impl TestUser {
         .to_string();
 
         sqlx::query!(
-            "INSERT INTO users (user_id, username, password_hash) VALUES ($1, $2, $3)",
-            self.user_id,
+            "INSERT INTO users (username, password_hash) VALUES ($1, $2)",
             self.username,
             password_hash
         )

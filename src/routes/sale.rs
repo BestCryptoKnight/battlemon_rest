@@ -1,10 +1,13 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use anyhow::Context;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
+use fake::faker::{chrono::en::DateTime, lorem::en::Word, number::raw::NumberWithFormat};
+use fake::locales::EN;
+use fake::{Dummy, Fake, Faker};
+use rand::Rng;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Postgres, Transaction};
-use uuid::Uuid;
 
 use crate::domain::{Limit, Offset, ParseToPositiveInt, SaleDays, SaleFilter};
 use crate::errors::SaleError;
@@ -13,13 +16,30 @@ use super::PaginationQuery;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Sale {
-    pub id: Uuid,
+    pub id: i64,
     pub prev_owner: String,
     pub curr_owner: String,
     pub token_id: String,
     #[serde(with = "rust_decimal::serde::str")]
     pub price: Decimal,
-    pub date: DateTime<Utc>,
+    pub date: chrono::DateTime<Utc>,
+}
+
+impl Dummy<Faker> for Sale {
+    fn dummy_with_rng<R: Rng + ?Sized>(_: &Faker, rng: &mut R) -> Self {
+        let scale = rng.gen_range(0..=24);
+        let lo = rng.gen();
+        let mid = rng.gen();
+        let price = Decimal::from_parts(lo, mid, 0, false, scale);
+        Self {
+            id: Faker.fake(),
+            prev_owner: format!("{}.near", Word().fake::<String>()),
+            curr_owner: format!("{}.near", Word().fake::<String>()),
+            token_id: NumberWithFormat(EN, "^########").fake::<String>(),
+            price,
+            date: DateTime().fake(),
+        }
+    }
 }
 
 impl TryFrom<PaginationQuery> for SaleFilter {
@@ -88,11 +108,10 @@ pub async fn store_sale(
     sqlx::query_as!(
         Sale,
         r#"
-        INSERT INTO sales (id, prev_owner, curr_owner, token_id, price, date)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO sales (prev_owner, curr_owner, token_id, price, date)
+        VALUES ($1, $2, $3, $4, $5)
         ON CONFLICT (token_id) DO NOTHING
         "#,
-        Uuid::new_v4(),
         sale.prev_owner,
         sale.curr_owner,
         sale.token_id,

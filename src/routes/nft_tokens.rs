@@ -8,7 +8,6 @@ use secrecy::{ExposeSecret, Secret};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 use sqlx::{PgPool, Postgres, Transaction};
-use uuid::Uuid;
 
 use crate::domain::{
     Limit, NftTokenDays, NftTokenFilter, NftTokenOwnerId, NftTokenTokenId, Offset, Parse,
@@ -108,7 +107,7 @@ fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Erro
 async fn validate_credentials(
     Credentials { username, password }: Credentials,
     pool: &PgPool,
-) -> Result<Uuid, NftTokensError> {
+) -> Result<i64, NftTokensError> {
     let mut user_id = None;
     // prevent time attack
     let mut password_hash = Secret::new(
@@ -158,7 +157,7 @@ fn verify_password_hash(
 async fn get_stored_credentials(
     username: &str,
     pool: &PgPool,
-) -> Result<Option<(Uuid, Secret<String>)>, anyhow::Error> {
+) -> Result<Option<(i64, Secret<String>)>, anyhow::Error> {
     let row = sqlx::query!(
         "SELECT user_id, password_hash FROM users WHERE username = $1",
         username,
@@ -199,11 +198,10 @@ pub async fn store_nft_token(
     sqlx::query_as!(
         NftToken,
         r#"
-        INSERT INTO nft_tokens (id, owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        INSERT INTO nft_tokens (owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         ON CONFLICT (token_id) DO NOTHING
         "#,
-        uuid::Uuid::new_v4(),
         nft_token.owner_id,
         nft_token.token_id,
         nft_token.title,

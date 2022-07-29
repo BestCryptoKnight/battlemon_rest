@@ -1,7 +1,7 @@
 use chrono::{Duration, Utc};
 use fake::{Fake, Faker};
 
-use battlemon_rest::routes::Paid;
+use battlemon_rest::routes::{Paid, Sale};
 use helpers::spawn_app;
 
 use crate::helpers::assert_json_error;
@@ -12,7 +12,7 @@ mod helpers;
 #[tokio::test]
 async fn paid_return_200_and_1_sale_in_history_stored_in_database() {
     let app = spawn_app().await;
-    let expected_sale: dummies::Sale = Faker.fake();
+    let expected_sale: Sale = Faker.fake();
     sqlx::query!(
         r#"
         INSERT INTO sales (id, prev_owner, curr_owner, token_id, price, date)
@@ -46,7 +46,7 @@ async fn paid_return_200_and_1_sale_in_history_stored_in_database() {
 #[tokio::test]
 async fn paid_success_and_returns_200_for_different_valid_queries() {
     let app = spawn_app().await;
-    let sales = fake::vec![dummies::Sale; 200];
+    let sales = fake::vec![battlemon_rest::routes::Sale; 200];
     for (idx, sale) in sales.iter().enumerate() {
         let date = if idx < 100 {
             Utc::now()

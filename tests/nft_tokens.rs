@@ -1,5 +1,5 @@
 use fake::Fake;
-use sqlx::types::{chrono::Utc, Json, Uuid};
+use sqlx::types::{chrono::Utc, Json};
 
 use crate::dummies::{AliceNftToken, BobNftToken, DannyNftToken};
 use battlemon_rest::routes::NftToken;
@@ -53,10 +53,9 @@ async fn nft_tokens_success_with_valid_queries() {
     for token in tokens {
         sqlx::query!(
             r#"
-            INSERT INTO nft_tokens (id, owner_id, token_id, media, model, db_created_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO nft_tokens (owner_id, token_id, media, model, db_created_at)
+            VALUES ($1, $2, $3, $4, $5)
             "#,
-            Uuid::new_v4(),
             token.owner_id,
             token.token_id,
             token.media,
@@ -126,10 +125,9 @@ async fn nft_tokens_for_valid_query_by_token_id_returns_200() {
     for token in &tokens {
         sqlx::query!(
             r#"
-            INSERT INTO nft_tokens (id, owner_id, token_id, media, model, db_created_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO nft_tokens (owner_id, token_id, media, model, db_created_at)
+            VALUES ($1, $2, $3, $4, $5)
             "#,
-            Uuid::new_v4(),
             token.owner_id,
             token.token_id,
             token.media,
