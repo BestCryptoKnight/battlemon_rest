@@ -7,7 +7,7 @@ use fake::{Dummy, Fake, Faker};
 use rand::Rng;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::json;
 use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::domain::{Limit, Offset, ParseToPositiveInt, SaleDays, SaleFilter};
