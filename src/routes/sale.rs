@@ -9,7 +9,7 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Postgres, Transaction};
 
-use crate::domain::{Limit, Offset, ParseToPositiveInt, SaleDays, SaleFilter};
+use crate::domain::{Limit, Offset, Parse, ParseToPositiveInt, SaleDays, SaleFilter, TokenId};
 use crate::errors::SaleError;
 use crate::routes::RowsJsonReport;
 
@@ -47,11 +47,16 @@ impl TryFrom<PaginationQuery> for SaleFilter {
     type Error = String;
 
     fn try_from(query: PaginationQuery) -> Result<Self, Self::Error> {
+        let token_id = TokenId::parse(query.token_id)?;
         let limit = Limit::parse(query.limit)?;
         let offset = Offset::parse(query.offset)?;
         SaleDays::parse(query.days)?;
 
-        Ok(Self { limit, offset })
+        Ok(Self {
+            limit,
+            offset,
+            token_id,
+        })
     }
 }
 
