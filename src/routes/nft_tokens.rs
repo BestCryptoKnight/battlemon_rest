@@ -10,7 +10,7 @@ use sqlx::types::Json;
 use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::domain::{
-    Limit, NftTokenDays, NftTokenFilter, NftTokenOwnerId, NftTokenTokenId, Offset, Parse,
+    Limit, NftTokenDays, NftTokenFilter, NftTokenOwnerId, TokenId, Offset, Parse,
     ParseToPositiveInt,
 };
 use crate::errors::NftTokensError;
@@ -44,7 +44,7 @@ pub struct NftToken {
 impl TryFrom<NftTokenQuery> for NftTokenFilter {
     type Error = String;
     fn try_from(query: NftTokenQuery) -> Result<Self, Self::Error> {
-        let token_id = NftTokenTokenId::parse(query.token_id)?;
+        let token_id = TokenId::parse(query.token_id)?;
         let owner_id = NftTokenOwnerId::parse(query.owner_id)?;
         let limit = Limit::parse(query.limit)?;
         let offset = Offset::parse(query.offset)?;
