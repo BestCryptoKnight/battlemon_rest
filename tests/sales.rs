@@ -1,10 +1,21 @@
-use battlemon_rest::routes::Sale;
+use battlemon_rest::routes::{RowsJsonReport, Sale};
 use fake::{Fake, Faker};
 
 use helpers::{assert_json_error, spawn_app};
 
 mod dummies;
 mod helpers;
+
+#[tokio::test]
+async fn sales_return_200_and_zero_stored_in_database_token() {
+    let app = spawn_app().await;
+
+    let response = app.get_sales("").await;
+    assert!(response.status().is_success());
+    let actual_sales: RowsJsonReport<Vec<Sale>> = response.json().await.unwrap();
+    assert_eq!(actual_sales.rows.len(), 0);
+    assert!(actual_sales.end);
+}
 
 #[tokio::test]
 async fn sales_return_200_and_one_stored_in_database_token() {
@@ -28,9 +39,10 @@ async fn sales_return_200_and_one_stored_in_database_token() {
 
     let response = app.get_sales("").await;
     assert!(response.status().is_success());
-    let actual_sales = response.json::<Vec<Sale>>().await.unwrap();
-    assert_eq!(actual_sales.len(), 1);
-    assert_eq!(actual_sales[0].id, expected_sale.id);
+    let actual_sales: RowsJsonReport<Vec<Sale>> = response.json().await.unwrap();
+    assert_eq!(actual_sales.rows.len(), 1);
+    assert_eq!(actual_sales.rows[0].id, expected_sale.id);
+    assert!(actual_sales.end);
 }
 
 #[tokio::test]
@@ -55,32 +67,34 @@ async fn sales_success_and_returns_200_for_different_valid_queries() {
     }
 
     let queries_and_expectations = [
-        ("", 100),
-        ("offset=2", 100),
-        ("offset=199", 1),
-        ("offset=200", 0),
-        ("offset=150", 50),
-        ("limit=50", 50),
-        ("limit=250", 200),
-        ("limit=0", 0),
-        ("offset=0&limit=0", 0),
-        ("offset=10&limit=25", 25),
-        ("offset=200&limit=10", 0),
-        ("offset=199&limit=11", 1),
+        ("", 100, false),
+        ("offset=2", 100, false),
+        ("offset=199", 1, true),
+        ("offset=200", 0, true),
+        ("offset=150", 50, true),
+        ("limit=50", 50, false),
+        ("limit=250", 200, true),
+        ("limit=0", 0, false),
+        ("offset=0&limit=0", 0, false),
+        ("offset=10&limit=25", 25, false),
+        ("offset=200&limit=10", 0, true),
+        ("offset=199&limit=11", 1, true),
     ];
 
-    for (idx, (query, expectation)) in queries_and_expectations.iter().enumerate() {
+    for (idx, (query, expectation, end)) in queries_and_expectations.iter().enumerate() {
         let response = app.get_sales(query).await;
         assert_eq!(response.status().as_u16(), 200);
 
-        let actual_sales = response.json::<Vec<Sale>>().await.unwrap();
+        let actual_sales = response.json::<RowsJsonReport<Vec<Sale>>>().await.unwrap();
         assert_eq!(
-            actual_sales.len(),
+            actual_sales.rows.len(),
             *expectation,
             "length of sales not the same. query is: {} with index: {}",
             query,
             idx
         );
+
+        assert_eq!(actual_sales.end, *end);
     }
 }
 
