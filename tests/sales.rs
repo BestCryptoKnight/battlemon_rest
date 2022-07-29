@@ -99,6 +99,76 @@ async fn sales_success_and_returns_200_for_different_valid_queries() {
 }
 
 #[tokio::test]
+async fn sales_success_with_valid_queries_for_token_id() {
+    let app = spawn_app().await;
+    let sales_with_id_1 = (0..100).map(|_| {
+        let mut sale: Sale = Faker.fake();
+        sale.token_id = "1".to_string();
+        sale
+    });
+    let sales_with_id_2 = (0..50).map(|_| {
+        let mut sale: Sale = Faker.fake();
+        sale.token_id = "2".to_string();
+        sale
+    });
+    let sales_with_id_3 = (0..25).map(|_| {
+        let mut sale: Sale = Faker.fake();
+        sale.token_id = "3".to_string();
+        sale
+    });
+
+    let sales: Vec<Sale> = sales_with_id_1
+        .chain(sales_with_id_2)
+        .chain(sales_with_id_3)
+        .collect();
+
+    for sale in sales {
+        sqlx::query!(
+            r#"
+            INSERT INTO sales (prev_owner, curr_owner, token_id, price, date)
+            VALUES ($1, $2, $3, $4, $5)
+            "#,
+            sale.prev_owner,
+            sale.curr_owner,
+            sale.token_id,
+            sale.price,
+            sale.date
+        )
+        .execute(&app.db_pool)
+        .await
+        .expect("Failed to execute query");
+    }
+
+    let queries_and_expectations = [
+        ("", 100, false),
+        ("token_id=1", 100, true),
+        ("token_id=2", 50, true),
+        ("token_id=3", 25, true),
+        ("token_id=1&limit=10", 10, false),
+        ("token_id=2&limit=20", 20, false),
+        ("token_id=3&limit=30", 25, true),
+        ("token_id=1&offset=10", 90, true),
+        ("token_id=3&offset=10&limit=5", 5, false),
+    ];
+
+    for (idx, (query, expectation, end)) in queries_and_expectations.iter().enumerate() {
+        let response = app.get_sales(query).await;
+        assert_eq!(response.status().as_u16(), 200);
+
+        let actual_sales = response.json::<RowsJsonReport<Sale>>().await.unwrap();
+        assert_eq!(
+            actual_sales.rows.len(),
+            *expectation,
+            "length of sales not the same. query is: {} with index: {}",
+            query,
+            idx
+        );
+
+        assert_eq!(actual_sales.end, *end);
+    }
+}
+
+#[tokio::test]
 async fn sale_fails_and_return_500_if_there_is_a_fatal_database_error() {
     let app = spawn_app().await;
     sqlx::query!("ALTER TABLE sales DROP COLUMN price;",)

@@ -52,29 +52,7 @@
     },
     "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales WHERE date >= $1 ORDER BY date OFFSET $2 LIMIT $3;\n        "
   },
-  "60213cfabc26229fce5a0f420218b244ddd369fcc9be8cb9a9c14222412e2812": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Jsonb",
-          "Timestamptz"
-        ]
-      }
-    },
-    "query": "\n        INSERT INTO nft_tokens (owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n        ON CONFLICT (token_id) DO NOTHING\n        "
-  },
-  "9481e03d85a44f220324915ac9a00788c277e0a00141a6254e4a16f723c02f6e": {
+  "2cc725c2abc832ba64842287f7ca54deff35407e224e4ef99f7a853aec5bec3a": {
     "describe": {
       "columns": [
         {
@@ -118,14 +96,15 @@
       ],
       "parameters": {
         "Left": [
+          "Text",
           "Int8",
           "Int8"
         ]
       }
     },
-    "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales ORDER BY date LIMIT $1 OFFSET $2;\n        "
+    "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales\n        WHERE ($1::text IS null OR token_id = $1)\n        ORDER BY id LIMIT $2 OFFSET $3;\n        "
   },
-  "98f3f8c6373dfc78b9c41f76a55e263d257f3f76e757e92ac6f2dd0305e7a11b": {
+  "42e858e24d84a1fcb90873613426d0e284c587f51e3929bc2d2e5648b1da50ce": {
     "describe": {
       "columns": [
         {
@@ -200,7 +179,29 @@
         ]
       }
     },
-    "query": "\n        SELECT token_id, owner_id, media, model as \"model: Json<ModelKind>\", copies, description, expires_at, issued_at, title, media_hash\n        FROM nft_tokens\n        WHERE ($1::text IS null OR token_id = $1)\n            AND ($2::text IS null OR owner_id = $2)\n        ORDER BY db_created_at LIMIT $3 OFFSET $4\n        "
+    "query": "\n        SELECT token_id, owner_id, media, model as \"model: Json<ModelKind>\", copies, description, expires_at, issued_at, title, media_hash\n        FROM nft_tokens\n        WHERE ($1::text IS null OR token_id = $1)\n            AND ($2::text IS null OR owner_id = $2)\n        ORDER BY id LIMIT $3 OFFSET $4\n        "
+  },
+  "60213cfabc26229fce5a0f420218b244ddd369fcc9be8cb9a9c14222412e2812": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Jsonb",
+          "Timestamptz"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO nft_tokens (owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n        ON CONFLICT (token_id) DO NOTHING\n        "
   },
   "aa1048e917e7918b479b36c5b9c3947146c499a1d4d7a85c7c1bcdddce57e219": {
     "describe": {
