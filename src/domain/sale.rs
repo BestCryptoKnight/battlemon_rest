@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct SaleFilter {
     pub limit: crate::domain::Limit,
     pub offset: crate::domain::Offset,
