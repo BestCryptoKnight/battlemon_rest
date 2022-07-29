@@ -1,7 +1,6 @@
 CREATE TABLE nft_tokens
 (
-    id            uuid        NOT NULL,
-    PRIMARY KEY (id),
+    id            BIGSERIAL PRIMARY KEY,
     owner_id      TEXT        NOT NULL,
     token_id      TEXT UNIQUE NOT NULL,
     title         TEXT,
