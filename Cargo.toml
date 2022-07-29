@@ -18,7 +18,7 @@ rust_decimal = { version = "1.23.1", features = ["serde-with-str"] }
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.78"
 config = { version = "0.11.0", default-features = false, features = ["yaml"] }
-uuid = { version = "0.8", features = ["serde", "v4"] }
+uuid = { version = "1.1.2", features = ["serde", "v1"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 tracing = "0.1.29"
 tracing-subscriber = { version = "0.3.7", features = ["registry", "env-filter"] }
