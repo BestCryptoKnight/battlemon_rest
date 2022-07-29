@@ -37,7 +37,7 @@ impl Application {
 
 pub fn get_connection_pool(config: &DatabaseSettings) -> PgPool {
     PgPoolOptions::new()
-        .connect_timeout(std::time::Duration::from_secs(2))
+        .acquire_timeout(std::time::Duration::from_secs(2))
         .connect_lazy_with(config.with_db())
 }
 
