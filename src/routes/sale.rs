@@ -11,7 +11,6 @@ use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::domain::{Limit, Offset, ParseToPositiveInt, SaleDays, SaleFilter};
 use crate::errors::SaleError;
-use crate::routes;
 use crate::routes::RowsJsonReport;
 
 use super::PaginationQuery;
@@ -65,8 +64,8 @@ pub async fn sale(
     let sales = query_sales(filter, &pool)
         .await
         .context("Failed to get the sale's data from the database.")?;
-    let (sales, end) = routes::build_report_for_rows(&sales, filter.limit());
-    Ok(HttpResponse::Ok().json(RowsJsonReport::new(sales, end)))
+
+    Ok(HttpResponse::Ok().json(RowsJsonReport::from_rows(sales, filter.limit())))
 }
 
 #[tracing::instrument(name = "Query sales from database", skip(filter, pool))]

@@ -17,23 +17,29 @@ pub struct PaginationQuery {
     pub offset: Option<i64>,
 }
 
-fn build_report_for_rows<T>(rows: &[T], limit: i64) -> (&[T], bool) {
-    let limit = limit as usize;
-    if rows.is_empty() || rows.len() <= limit {
-        (rows, true)
-    } else {
-        (&rows[..limit], false)
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RowsJsonReport<T> {
-    pub rows: T,
+    pub rows: Vec<T>,
     pub end: bool,
 }
 
-impl<T> RowsJsonReport<T> {
-    pub fn new(rows: T, end: bool) -> Self {
+impl<'de, T> RowsJsonReport<T>
+where
+    T: Serialize + Deserialize<'de>,
+{
+    fn new(rows: Vec<T>, end: bool) -> Self {
         Self { rows, end }
+    }
+
+    pub fn from_rows(mut rows: Vec<T>, limit: i64) -> Self {
+        let limit = limit as usize;
+        let (rows, end) = if rows.is_empty() || rows.len() <= limit {
+            (rows, true)
+        } else {
+            rows.pop();
+            (rows, false)
+        };
+
+        Self::new(rows, end)
     }
 }

@@ -12,7 +12,7 @@ async fn sales_return_200_and_zero_stored_in_database_token() {
 
     let response = app.get_sales("").await;
     assert!(response.status().is_success());
-    let actual_sales: RowsJsonReport<Vec<Sale>> = response.json().await.unwrap();
+    let actual_sales: RowsJsonReport<Sale> = response.json().await.unwrap();
     assert_eq!(actual_sales.rows.len(), 0);
     assert!(actual_sales.end);
 }
@@ -39,7 +39,7 @@ async fn sales_return_200_and_one_stored_in_database_token() {
 
     let response = app.get_sales("").await;
     assert!(response.status().is_success());
-    let actual_sales: RowsJsonReport<Vec<Sale>> = response.json().await.unwrap();
+    let actual_sales: RowsJsonReport<Sale> = response.json().await.unwrap();
     assert_eq!(actual_sales.rows.len(), 1);
     assert_eq!(actual_sales.rows[0].id, expected_sale.id);
     assert!(actual_sales.end);
@@ -85,7 +85,7 @@ async fn sales_success_and_returns_200_for_different_valid_queries() {
         let response = app.get_sales(query).await;
         assert_eq!(response.status().as_u16(), 200);
 
-        let actual_sales = response.json::<RowsJsonReport<Vec<Sale>>>().await.unwrap();
+        let actual_sales = response.json::<RowsJsonReport<Sale>>().await.unwrap();
         assert_eq!(
             actual_sales.rows.len(),
             *expectation,

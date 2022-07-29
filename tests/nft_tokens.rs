@@ -2,7 +2,7 @@ use fake::Fake;
 use sqlx::types::{chrono::Utc, Json};
 
 use crate::dummies::{AliceNftToken, BobNftToken, DannyNftToken};
-use battlemon_rest::routes::NftToken;
+use battlemon_rest::routes::{NftToken, RowsJsonReport};
 use helpers::{assert_json_error, spawn_app};
 
 mod dummies;
@@ -68,34 +68,40 @@ async fn nft_tokens_success_with_valid_queries() {
     }
 
     let valid_queries_and_expected_lengths = [
-        ("", 100),
-        ("owner_id=alice.near", 50),
-        ("owner_id=bob.near", 30),
-        ("owner_id=danny.near", 20),
-        ("owner_id=danny.near&limit=10", 10),
-        ("owner_id=danny.near&limit=20", 20),
-        ("owner_id=danny.near&limit=30", 20),
-        ("owner_id=danny.near&offset=10", 10),
-        ("owner_id=danny.near&offset=10&limit=5", 5),
+        ("", 100, true),
+        ("owner_id=alice.near", 50, true),
+        ("owner_id=bob.near", 30, true),
+        ("owner_id=danny.near", 20, true),
+        ("owner_id=danny.near&limit=10", 10, false),
+        ("owner_id=danny.near&limit=20", 20, true),
+        ("owner_id=danny.near&limit=30", 20, true),
+        ("owner_id=danny.near&offset=10", 10, true),
+        ("owner_id=danny.near&offset=10&limit=5", 5, false),
     ];
 
-    for (query, length) in valid_queries_and_expected_lengths {
+    for (query, length, end) in valid_queries_and_expected_lengths {
         let response = app.get_nft_tokens(query).await;
         assert!(
             response.status().is_success(),
             "Response status for query `{}` doesn't equal `200`",
             query
         );
-        let tokens: Vec<NftToken> = response
+        let tokens: RowsJsonReport<NftToken> = response
             .json()
             .await
             .expect("Couldn't parse response into `NftToken`");
 
         assert_eq!(
-            tokens.len(),
+            tokens.rows.len(),
             length,
-            "The length of deserialized `Vec<NftToken>` from response doesn't equal `{}`",
+            "The length of deserialized `RowsJsonReport<NftToken>` from response doesn't equal `{}`",
             length
+        );
+
+        assert_eq!(
+            tokens.end, end,
+            "The `end` field of deserialized `RowsJsonReport<NftToken>` doesn't equal `{}`",
+            end
         );
     }
 }
@@ -145,17 +151,17 @@ async fn nft_tokens_for_valid_query_by_token_id_returns_200() {
         assert!(response.status().is_success());
 
         let nft_tokens_json = response
-            .json::<Vec<NftToken>>()
+            .json::<RowsJsonReport<NftToken>>()
             .await
-            .expect("Couldn't deserialize response into `Vec<NftToken>`");
+            .expect("Couldn't deserialize response into `RowsJsonReport<NftToken>`");
         assert_eq!(
-            nft_tokens_json.len(),
+            nft_tokens_json.rows.len(),
             1,
             "Expected length `1` for query `{}` and actual doesn't equal.",
             query
         );
 
-        let actual_token_id = nft_tokens_json[0].token_id.as_str();
+        let actual_token_id = nft_tokens_json.rows[0].token_id.as_str();
         assert_eq!(
             actual_token_id, expected_token.token_id,
             "Token id from response `{}` and expected id `{}` doesn't equal.",

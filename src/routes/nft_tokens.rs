@@ -14,9 +14,10 @@ use crate::domain::{
     ParseToPositiveInt,
 };
 use crate::errors::NftTokensError;
+use crate::routes::RowsJsonReport;
 use crate::telemetry::spawn_blocking_with_tracing;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct NftTokenQuery {
     pub days: Option<i64>,
     pub limit: Option<i64>,
@@ -64,11 +65,11 @@ pub async fn nft_tokens(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, NftTokensError> {
     let filter: NftTokenFilter = filter.try_into().map_err(NftTokensError::ValidationError)?;
-    let nft_tokens = query_nft_tokens(pool, filter)
+    let nft_tokens = query_nft_tokens(pool, &filter)
         .await
         .context("Failed to get the nft tokens data from database.")?;
 
-    Ok(HttpResponse::Ok().json(nft_tokens))
+    Ok(HttpResponse::Ok().json(RowsJsonReport::from_rows(nft_tokens, filter.limit())))
 }
 
 struct Credentials {
@@ -223,7 +224,7 @@ pub async fn store_nft_token(
 #[tracing::instrument(name = "Query nft tokens from database", skip(filter, pool))]
 pub async fn query_nft_tokens(
     pool: web::Data<PgPool>,
-    filter: NftTokenFilter,
+    filter: &NftTokenFilter,
 ) -> Result<Vec<NftToken>, anyhow::Error> {
     let rows= sqlx::query_as!(
         NftToken,
@@ -236,7 +237,7 @@ pub async fn query_nft_tokens(
         "#,
         filter.token_id(),
         filter.owner_id(),
-        filter.limit(),
+        filter.limit() + 1,
         filter.offset(),
     )
     .fetch_all(pool.get_ref())

@@ -1,6 +1,6 @@
 use crate::domain::Parse;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NftTokenTokenId(Option<String>);
 
 crate::domain::impl_into_inner!(NftTokenTokenId);

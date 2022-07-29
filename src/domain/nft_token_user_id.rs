@@ -9,7 +9,7 @@ static RE: Lazy<Regex> = Lazy::new(|| {
         .expect("Couldn't compile regexp expression")
 });
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NftTokenOwnerId(Option<String>);
 
 crate::domain::impl_into_inner!(NftTokenOwnerId);
