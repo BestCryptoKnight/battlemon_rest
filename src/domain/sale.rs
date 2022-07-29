@@ -1,7 +1,10 @@
-#[derive(Debug, Copy, Clone)]
+use crate::domain::AsInner;
+
+#[derive(Debug, Clone)]
 pub struct SaleFilter {
     pub limit: crate::domain::Limit,
     pub offset: crate::domain::Offset,
+    pub token_id: crate::domain::TokenId,
 }
 
 impl SaleFilter {
@@ -11,5 +14,9 @@ impl SaleFilter {
 
     pub fn offset(&self) -> i64 {
         self.offset.get()
+    }
+
+    pub fn token_id(&self) -> Option<&str> {
+        self.token_id.as_inner()
     }
 }
