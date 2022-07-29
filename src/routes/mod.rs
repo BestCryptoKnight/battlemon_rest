@@ -10,8 +10,9 @@ mod nft_tokens;
 mod paid;
 mod sale;
 
-#[derive(Deserialize, Debug, Copy, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct PaginationQuery {
+    pub token_id: Option<String>,
     pub days: Option<i64>,
     pub limit: Option<i64>,
     pub offset: Option<i64>,
