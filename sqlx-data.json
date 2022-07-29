@@ -6,7 +6,7 @@
         {
           "name": "id",
           "ordinal": 0,
-          "type_info": "Uuid"
+          "type_info": "Int8"
         },
         {
           "name": "prev_owner",
@@ -52,13 +52,12 @@
     },
     "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales WHERE date >= $1 ORDER BY date OFFSET $2 LIMIT $3;\n        "
   },
-  "12c78b2afbd6ea35c2acbb8d2e4e908b456defa93dd06a3ce2d9a7050d98910c": {
+  "60213cfabc26229fce5a0f420218b244ddd369fcc9be8cb9a9c14222412e2812": {
     "describe": {
       "columns": [],
       "nullable": [],
       "parameters": {
         "Left": [
-          "Uuid",
           "Text",
           "Text",
           "Text",
@@ -73,7 +72,7 @@
         ]
       }
     },
-    "query": "\n        INSERT INTO nft_tokens (id, owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)\n        ON CONFLICT (token_id) DO NOTHING\n        "
+    "query": "\n        INSERT INTO nft_tokens (owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n        ON CONFLICT (token_id) DO NOTHING\n        "
   },
   "9481e03d85a44f220324915ac9a00788c277e0a00141a6254e4a16f723c02f6e": {
     "describe": {
@@ -81,7 +80,7 @@
         {
           "name": "id",
           "ordinal": 0,
-          "type_info": "Uuid"
+          "type_info": "Int8"
         },
         {
           "name": "prev_owner",
@@ -209,7 +208,7 @@
         {
           "name": "user_id",
           "ordinal": 0,
-          "type_info": "Uuid"
+          "type_info": "Int8"
         },
         {
           "name": "password_hash",
@@ -229,13 +228,12 @@
     },
     "query": "SELECT user_id, password_hash FROM users WHERE username = $1"
   },
-  "f3c717a79f647c3488cb68fb6351be295623d1cd58e1a24057671e24bc6513b1": {
+  "fd7ff415358b338bd3476009ee7446b2e9363b5a872c1db859d261045ac5b07a": {
     "describe": {
       "columns": [],
       "nullable": [],
       "parameters": {
         "Left": [
-          "Uuid",
           "Text",
           "Text",
           "Text",
@@ -244,6 +242,6 @@
         ]
       }
     },
-    "query": "\n        INSERT INTO sales (id, prev_owner, curr_owner, token_id, price, date)\n        VALUES ($1, $2, $3, $4, $5, $6)\n        ON CONFLICT (token_id) DO NOTHING\n        "
+    "query": "\n        INSERT INTO sales (prev_owner, curr_owner, token_id, price, date)\n        VALUES ($1, $2, $3, $4, $5)\n        ON CONFLICT (token_id) DO NOTHING\n        "
   }
 }
