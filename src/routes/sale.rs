@@ -7,10 +7,12 @@ use fake::{Dummy, Fake, Faker};
 use rand::Rng;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::domain::{Limit, Offset, ParseToPositiveInt, SaleDays, SaleFilter};
 use crate::errors::SaleError;
+use crate::routes;
 
 use super::PaginationQuery;
 
@@ -63,8 +65,8 @@ pub async fn sale(
     let sales = query_sales(filter, &pool)
         .await
         .context("Failed to get the sale's data from the database.")?;
-
-    Ok(HttpResponse::Ok().json(sales))
+    let (sales, end) = routes::build_report_for_rows(&sales, filter.limit());
+    Ok(HttpResponse::Ok().json(json!({ "sales": sales, "end": end })))
 }
 
 #[tracing::instrument(name = "Query sales from database", skip(filter, pool))]
@@ -73,9 +75,9 @@ pub async fn query_sales(filter: SaleFilter, pool: &PgPool) -> Result<Vec<Sale>,
         Sale,
         r#"
         SELECT id, prev_owner, curr_owner, token_id, price, date
-        FROM sales ORDER BY date LIMIT $1 OFFSET $2;
+        FROM sales ORDER BY id LIMIT $1 OFFSET $2;
         "#,
-        filter.limit(),
+        filter.limit() + 1,
         filter.offset()
     )
     .fetch_all(pool)
