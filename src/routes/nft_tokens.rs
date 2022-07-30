@@ -10,8 +10,8 @@ use sqlx::types::Json;
 use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::domain::{
-    Limit, NftTokenDays, NftTokenFilter, NftTokenOwnerId, TokenId, Offset, Parse,
-    ParseToPositiveInt,
+    Limit, NftTokenDays, NftTokenFilter, NftTokenOwnerId, Offset, Parse, ParseToPositiveInt,
+    TokenId,
 };
 use crate::errors::NftTokensError;
 use crate::routes::RowsJsonReport;

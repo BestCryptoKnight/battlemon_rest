@@ -1,8 +1,12 @@
 FROM lukemathwalker/cargo-chef:latest-rust-1.62.1-slim-bullseye AS chef
 WORKDIR /app
 RUN apt-get update -y \
-    && apt-get install -y cmake pkg-config libssl-dev git clang \
-    && rustup toolchain install nightly
+    && apt-get install -y  \
+      cmake \
+      pkg-config \
+      libssl-dev \
+      git \
+      clang
 
 FROM chef AS planner
 COPY . .
@@ -13,7 +17,7 @@ ENV SQLX_OFFLINE=true
 COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
-RUN cargo +nightly build --release --bin battlemon_rest
+RUN cargo build --release --bin battlemon_rest
 
 FROM debian:bullseye-20220711-slim AS runtime
 WORKDIR /app
