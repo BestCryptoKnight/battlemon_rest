@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use anyhow::Context;
-use battlemon_models::market::Sale;
+use battlemon_models::market::{Sale, SaleForInserting};
 use chrono::Utc;
 use sqlx::{PgPool, Postgres, Transaction};
 
@@ -62,7 +62,7 @@ pub async fn query_sales(filter: &SaleFilter, pool: &PgPool) -> Result<Vec<Sale>
 
 #[tracing::instrument(name = "Insert sale", skip(sale, _request, pool))]
 pub async fn insert_sale(
-    web::Json(sale): web::Json<Sale>,
+    web::Json(sale): web::Json<SaleForInserting>,
     _request: HttpRequest,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, SaleError> {
@@ -78,11 +78,10 @@ pub async fn insert_sale(
 
 #[tracing::instrument(name = "Store sale to database", skip(tx))]
 pub async fn store_sale(
-    sale: Sale,
+    sale: SaleForInserting,
     tx: &mut Transaction<'_, Postgres>,
 ) -> Result<(), anyhow::Error> {
-    sqlx::query_as!(
-        Sale,
+    sqlx::query!(
         r#"
         INSERT INTO sales (prev_owner, curr_owner, token_id, price, date)
         VALUES ($1, $2, $3, $4, $5)

@@ -1,7 +1,7 @@
 use fake::faker::address::en::Geohash;
 
+use battlemon_models::nft::{Lemon, ModelKind};
 use fake::{Dummy, Fake};
-use nft_models::{Lemon, ModelKind};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 

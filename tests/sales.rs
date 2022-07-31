@@ -1,4 +1,6 @@
-use battlemon_rest::routes::{RowsJsonReport, Sale};
+use battlemon_models::market::{Sale, SaleForInserting};
+use battlemon_rest::routes::RowsJsonReport;
+use chrono::Utc;
 use fake::{Fake, Faker};
 
 use helpers::{assert_json_error, spawn_app};
@@ -20,18 +22,17 @@ async fn sales_return_200_and_zero_stored_in_database_token() {
 #[tokio::test]
 async fn sales_return_200_and_one_stored_in_database_token() {
     let app = spawn_app().await;
-    let expected_sale: Sale = Faker.fake();
+    let expected_sale: SaleForInserting = Faker.fake();
     sqlx::query!(
         r#"
-        INSERT INTO sales (id, prev_owner, curr_owner, token_id, price, date)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO sales (prev_owner, curr_owner, token_id, price, date)
+        VALUES ($1, $2, $3, $4, $5)
         "#,
-        expected_sale.id,
         expected_sale.prev_owner,
         expected_sale.curr_owner,
         expected_sale.token_id,
         expected_sale.price,
-        expected_sale.date
+        Utc::now(),
     )
     .execute(&app.db_pool)
     .await
@@ -41,14 +42,14 @@ async fn sales_return_200_and_one_stored_in_database_token() {
     assert!(response.status().is_success());
     let actual_sales: RowsJsonReport<Sale> = response.json().await.unwrap();
     assert_eq!(actual_sales.rows.len(), 1);
-    assert_eq!(actual_sales.rows[0].id, expected_sale.id);
+    assert_eq!(actual_sales.rows[0].token_id, expected_sale.token_id);
     assert!(actual_sales.end);
 }
 
 #[tokio::test]
 async fn sales_success_and_returns_200_for_different_valid_queries() {
     let app = spawn_app().await;
-    let sales = fake::vec![Sale; 200];
+    let sales = fake::vec![SaleForInserting; 200];
     for sale in sales {
         sqlx::query!(
             r#"
@@ -59,7 +60,7 @@ async fn sales_success_and_returns_200_for_different_valid_queries() {
             sale.curr_owner,
             sale.token_id,
             sale.price,
-            sale.date
+            Utc::now(),
         )
         .execute(&app.db_pool)
         .await
@@ -102,22 +103,22 @@ async fn sales_success_and_returns_200_for_different_valid_queries() {
 async fn sales_success_with_valid_queries_for_token_id() {
     let app = spawn_app().await;
     let sales_with_id_1 = (0..100).map(|_| {
-        let mut sale: Sale = Faker.fake();
+        let mut sale: SaleForInserting = Faker.fake();
         sale.token_id = "1".to_string();
         sale
     });
     let sales_with_id_2 = (0..50).map(|_| {
-        let mut sale: Sale = Faker.fake();
+        let mut sale: SaleForInserting = Faker.fake();
         sale.token_id = "2".to_string();
         sale
     });
     let sales_with_id_3 = (0..25).map(|_| {
-        let mut sale: Sale = Faker.fake();
+        let mut sale: SaleForInserting = Faker.fake();
         sale.token_id = "3".to_string();
         sale
     });
 
-    let sales: Vec<Sale> = sales_with_id_1
+    let sales: Vec<SaleForInserting> = sales_with_id_1
         .chain(sales_with_id_2)
         .chain(sales_with_id_3)
         .collect();
@@ -132,7 +133,7 @@ async fn sales_success_with_valid_queries_for_token_id() {
             sale.curr_owner,
             sale.token_id,
             sale.price,
-            sale.date
+            Utc::now(),
         )
         .execute(&app.db_pool)
         .await
