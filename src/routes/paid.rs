@@ -3,49 +3,14 @@ use anyhow::Context;
 use chrono::{Duration, Utc};
 use rust_decimal::prelude::Zero;
 use rust_decimal::Decimal;
-use serde::{Deserialize, Serialize};
+
+use battlemon_models::market::{Paid, Sale};
 use sqlx::PgPool;
 
 use crate::domain::{Limit, Offset, PaidDays, PaidFilter, ParseToPositiveInt};
 use crate::errors::PaidError;
-use crate::routes::Sale;
 
 use super::PaginationQuery;
-
-#[derive(Serialize, Deserialize)]
-pub struct Paid {
-    pub history: Vec<Sale>,
-    pub statistics: PaidStatistics,
-}
-
-impl Paid {
-    fn new(
-        history: Vec<Sale>,
-        total_trades_volume: Decimal,
-        total_number_of_trades: usize,
-        top_trade: Decimal,
-    ) -> Self {
-        let statistics = PaidStatistics {
-            total_trades_volume,
-            total_number_of_trades,
-            top_trade,
-        };
-
-        Self {
-            history,
-            statistics,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct PaidStatistics {
-    #[serde(with = "rust_decimal::serde::str")]
-    pub total_trades_volume: Decimal,
-    pub total_number_of_trades: usize,
-    #[serde(with = "rust_decimal::serde::str")]
-    pub top_trade: Decimal,
-}
 
 impl TryFrom<PaginationQuery> for PaidFilter {
     type Error = String;
@@ -118,20 +83,17 @@ fn calculate_report(trades: &[Sale]) -> (Decimal, Decimal) {
 
 #[cfg(test)]
 mod test {
+    use super::*;
     use rust_decimal_macros::dec;
 
-    use super::*;
-
-    impl Default for Sale {
-        fn default() -> Self {
-            Sale {
-                id: Default::default(),
-                prev_owner: Default::default(),
-                curr_owner: Default::default(),
-                token_id: Default::default(),
-                price: Default::default(),
-                date: Utc::now(),
-            }
+    fn get_sale() -> Sale {
+        Sale {
+            id: 1,
+            prev_owner: "alice.near".to_string(),
+            curr_owner: "bob.near".to_string(),
+            token_id: "1".to_string(),
+            price: Default::default(),
+            date: Utc::now(),
         }
     }
 
@@ -147,7 +109,7 @@ mod test {
     fn calculate_report_one_trade() {
         let trade = Sale {
             price: dec!(10),
-            ..Sale::default()
+            ..get_sale()
         };
 
         let rows = vec![trade];
@@ -160,12 +122,12 @@ mod test {
     fn calculate_report_two_trades() {
         let trade0 = Sale {
             price: dec!(1),
-            ..Sale::default()
+            ..get_sale()
         };
 
         let trade1 = Sale {
             price: dec!(10),
-            ..Sale::default()
+            ..get_sale()
         };
 
         let rows = vec![trade0, trade1];
@@ -178,17 +140,17 @@ mod test {
     fn calculate_report_tree_trades() {
         let trade0 = Sale {
             price: dec!(5),
-            ..Sale::default()
+            ..get_sale()
         };
 
         let trade1 = Sale {
             price: dec!(3),
-            ..Sale::default()
+            ..get_sale()
         };
 
         let trade2 = Sale {
             price: dec!(1),
-            ..Sale::default()
+            ..get_sale()
         };
 
         let rows = vec![trade0, trade1, trade2];

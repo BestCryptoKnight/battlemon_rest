@@ -1,12 +1,7 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use anyhow::Context;
+use battlemon_models::market::Sale;
 use chrono::Utc;
-use fake::faker::{chrono::en::DateTime, lorem::en::Word, number::raw::NumberWithFormat};
-use fake::locales::EN;
-use fake::{Dummy, Fake, Faker};
-use rand::Rng;
-use rust_decimal::Decimal;
-use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::domain::{Limit, Offset, Parse, ParseToPositiveInt, SaleDays, SaleFilter, TokenId};
@@ -14,34 +9,6 @@ use crate::errors::SaleError;
 use crate::routes::RowsJsonReport;
 
 use super::PaginationQuery;
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Sale {
-    pub id: i64,
-    pub prev_owner: String,
-    pub curr_owner: String,
-    pub token_id: String,
-    #[serde(with = "rust_decimal::serde::str")]
-    pub price: Decimal,
-    pub date: chrono::DateTime<Utc>,
-}
-
-impl Dummy<Faker> for Sale {
-    fn dummy_with_rng<R: Rng + ?Sized>(_: &Faker, rng: &mut R) -> Self {
-        let scale = rng.gen_range(0..=24);
-        let lo = rng.gen();
-        let mid = rng.gen();
-        let price = Decimal::from_parts(lo, mid, 0, false, scale);
-        Self {
-            id: Faker.fake(),
-            prev_owner: format!("{}.near", Word().fake::<String>()),
-            curr_owner: format!("{}.near", Word().fake::<String>()),
-            token_id: NumberWithFormat(EN, "^########").fake::<String>(),
-            price,
-            date: DateTime().fake(),
-        }
-    }
-}
 
 impl TryFrom<PaginationQuery> for SaleFilter {
     type Error = String;
