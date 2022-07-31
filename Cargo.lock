@@ -317,6 +317,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3bdca834647821e0b13d9539a8634eb62d3501b6b6c2cec1722786ee6671b851"
 
 [[package]]
+name = "battlemon_models"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "enum_dispatch",
+ "fake",
+ "near-contract-standards",
+ "near-sdk",
+ "rand 0.8.5",
+ "rust_decimal",
+ "serde",
+]
+
+[[package]]
 name = "battlemon_rest"
 version = "0.1.0"
 dependencies = [
@@ -324,10 +338,10 @@ dependencies = [
  "anyhow",
  "argon2",
  "base64 0.13.0",
+ "battlemon_models",
  "chrono",
  "config",
  "fake",
- "nft_models",
  "once_cell",
  "quickcheck",
  "quickcheck_macros",
@@ -1392,15 +1406,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "manager_derive_macro"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "matchers"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1672,16 +1677,6 @@ dependencies = [
  "serde",
  "sha2 0.10.2",
  "sha3",
-]
-
-[[package]]
-name = "nft_models"
-version = "0.1.0"
-dependencies = [
- "enum_dispatch",
- "manager_derive_macro",
- "near-contract-standards",
- "near-sdk",
 ]
 
 [[package]]
@@ -2479,9 +2474,9 @@ dependencies = [
 
 [[package]]
 name = "sha3"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "881bf8156c87b6301fc5ca6b27f11eeb2761224c7081e69b409d5a1951a70c86"
+checksum = "0a31480366ec990f395a61b7c08122d99bd40544fdb5abcfc1b06bb29994312c"
 dependencies = [
  "digest 0.10.3",
  "keccak",
