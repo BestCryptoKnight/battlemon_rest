@@ -70,7 +70,6 @@ impl TestApp {
 }
 
 pub struct TestUser {
-    pub user_id: Uuid,
     pub username: String,
     pub password: String,
 }
@@ -78,7 +77,6 @@ pub struct TestUser {
 impl TestUser {
     pub fn generate() -> Self {
         Self {
-            user_id: Uuid::new_v4(),
             username: Uuid::new_v4().to_string(),
             password: Uuid::new_v4().to_string(),
         }
