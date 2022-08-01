@@ -60,6 +60,14 @@ impl TestApp {
         self.get("nft_tokens", query).await
     }
 
+    pub async fn post_sale<T: Serialize>(&self, json: &T) -> Response {
+        self.builder_post_json("sales", json)
+            .basic_auth(&self.test_user.username, Some(&self.test_user.password))
+            .send()
+            .await
+            .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
+    }
+
     pub async fn post_nft_token<T: Serialize>(&self, json: &T) -> Response {
         self.builder_post_json("nft_tokens", json)
             .basic_auth(&self.test_user.username, Some(&self.test_user.password))
