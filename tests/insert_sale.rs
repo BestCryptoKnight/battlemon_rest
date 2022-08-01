@@ -148,6 +148,47 @@ async fn insert_invalid_sale_rejects_and_returns_400_status() {
 }
 
 #[tokio::test]
+async fn insert_valid_two_sales_success() -> anyhow::Result<()> {
+    let app = spawn_app().await;
+    let sale: SaleForInserting = Faker.fake();
+    for _ in 0..2 {
+        let response = app.post_sale(&sale).await;
+
+        let status = response.status();
+        let body = response
+            .text()
+            .await
+            .context("Couldn't get the response text")?;
+
+        assert_eq!(
+            status, 201,
+            "The expected response doesn't have `201` status code.\n 
+            The actual response has status code `{}` and body: `{}`",
+            status, body,
+        );
+    }
+
+    let response: RowsJsonReport<Sale> = app
+        .get_sales(&format!("token_id={}", sale.token_id))
+        .await
+        .json()
+        .await?;
+
+    assert_eq!(
+        response.rows.len(),
+        2,
+        "The expected number of rows is 2, actual is `{}`",
+        response.rows.len()
+    );
+
+    assert_eq!(
+        response.rows[0].token_id, sale.token_id,
+        "The inserted token id doesn't match the returned token id"
+    );
+    Ok(())
+}
+
+#[tokio::test]
 async fn insert_sale_fails_and_return_500_if_there_is_a_fatal_database_error() {
     let app = spawn_app().await;
     let sale: SaleForInserting = Faker.fake();
