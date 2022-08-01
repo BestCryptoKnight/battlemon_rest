@@ -203,6 +203,22 @@
     },
     "query": "\n        INSERT INTO nft_tokens (owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n        ON CONFLICT (token_id) DO NOTHING\n        "
   },
+  "6a6b7f82929ed1205cbaa5b7a8db800eaf44fdf06cb618517a60c22edd3d623b": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Numeric",
+          "Timestamptz"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO sales (prev_owner, curr_owner, token_id, price, date)\n        VALUES ($1, $2, $3, $4, $5)\n        "
+  },
   "aa1048e917e7918b479b36c5b9c3947146c499a1d4d7a85c7c1bcdddce57e219": {
     "describe": {
       "columns": [
@@ -228,21 +244,5 @@
       }
     },
     "query": "SELECT user_id, password_hash FROM users WHERE username = $1"
-  },
-  "fd7ff415358b338bd3476009ee7446b2e9363b5a872c1db859d261045ac5b07a": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Numeric",
-          "Timestamptz"
-        ]
-      }
-    },
-    "query": "\n        INSERT INTO sales (prev_owner, curr_owner, token_id, price, date)\n        VALUES ($1, $2, $3, $4, $5)\n        ON CONFLICT (token_id) DO NOTHING\n        "
   }
 }
