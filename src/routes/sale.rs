@@ -85,7 +85,6 @@ pub async fn store_sale(
         r#"
         INSERT INTO sales (prev_owner, curr_owner, token_id, price, date)
         VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (token_id) DO NOTHING
         "#,
         sale.prev_owner,
         sale.curr_owner,
