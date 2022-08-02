@@ -5,8 +5,8 @@ use actix_web::HttpResponse;
 
 #[derive(thiserror::Error)]
 pub enum NftTokensError {
-    #[error("Authentication failed.")]
-    AuthError(#[source] anyhow::Error),
+    #[error(transparent)]
+    AuthError(#[from] crate::auth::password::AuthError),
     #[error("{0}")]
     ValidationError(String),
     #[error(transparent)]
