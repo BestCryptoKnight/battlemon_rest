@@ -5,10 +5,12 @@ use actix_web::http::header;
 use actix_web::{HttpResponse, ResponseError};
 use serde::{Deserialize, Serialize};
 
+pub use auth::*;
 pub use nft_tokens::*;
 pub use paid::*;
 pub use sale::*;
 
+mod auth;
 mod nft_tokens;
 mod paid;
 mod sale;

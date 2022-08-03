@@ -1,17 +1,10 @@
+use crate::errors::AuthError;
 use crate::telemetry::spawn_blocking_with_tracing;
 use actix_web::http::header::HeaderMap;
 use anyhow::Context;
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
-
-#[derive(thiserror::Error, Debug)]
-pub enum AuthError {
-    #[error("Invalid credentials")]
-    InvalidCredentials(#[source] anyhow::Error),
-    #[error(transparent)]
-    UnexpectedError(#[from] anyhow::Error),
-}
 
 pub struct Credentials {
     pub username: String,
@@ -83,30 +76,41 @@ pub async fn validate_credentials(
         .context("Failed to spawn blocking task.")??;
 
     user_id
-        .ok_or_else(|| anyhow::anyhow!("Unknown username."))
+        .context("Unknown username.")
         .map_err(AuthError::InvalidCredentials)
 }
 
-pub fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Error> {
+pub fn basic_auth(headers: &HeaderMap) -> Result<Credentials, AuthError> {
     let header_value = headers
         .get("Authorization")
-        .context("The `Authorization` header was missing.")?
+        .context("The `Authorization` header was missing.")
+        .map_err(AuthError::BadRequest)?
         .to_str()
-        .context("The `Authorization` header was not a valid UTF-8 string.")?;
+        .context("The `Authorization` header was not a valid UTF-8 string.")
+        .map_err(AuthError::BadRequest)?;
+
     let base64encoded_segment = header_value
         .strip_prefix("Basic ")
-        .context("The authorization scheme was not `Basic`.")?;
+        .context("The authorization scheme was not `Basic`.")
+        .map_err(AuthError::BadRequest)?;
+
     let decoded_bytes = base64::decode_config(base64encoded_segment, base64::STANDARD)
-        .context("Failed to base64-decode `Basic` credentials.")?;
+        .context("Failed to base64-decode `Basic` credentials.")
+        .map_err(AuthError::BadRequest)?;
+
     let decoded_credentials = String::from_utf8(decoded_bytes)
-        .context("The decoded credential string is not valid UTF-8")?;
+        .context("The decoded credential string is not valid UTF-8")
+        .map_err(AuthError::BadRequest)?;
+
     let mut credentials = decoded_credentials.splitn(2, ':');
     let username = credentials
         .next()
-        .context("A username must be provided in `Basic` auth")?;
+        .context("A username must be provided in `Basic` auth")
+        .map_err(AuthError::BadRequest)?;
     let password = credentials
         .next()
-        .context("A password must be provided in `Basic` auth")?;
+        .context("A password must be provided in `Basic` auth")
+        .map_err(AuthError::BadRequest)?;
 
     Ok(Credentials {
         username: username.to_string(),

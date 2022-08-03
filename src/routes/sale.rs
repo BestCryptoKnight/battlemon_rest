@@ -1,4 +1,4 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{web, HttpResponse};
 use anyhow::Context;
 use battlemon_models::market::{Sale, SaleForInserting};
 use chrono::Utc;
@@ -60,10 +60,9 @@ pub async fn query_sales(filter: &SaleFilter, pool: &PgPool) -> Result<Vec<Sale>
     Ok(rows)
 }
 
-#[tracing::instrument(name = "Insert sale", skip(sale, _request, pool))]
+#[tracing::instrument(name = "Insert sale", skip(sale, pool))]
 pub async fn insert_sale(
     web::Json(sale): web::Json<SaleForInserting>,
-    _request: HttpRequest,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, SaleError> {
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;

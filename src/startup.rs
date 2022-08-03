@@ -1,7 +1,9 @@
 use std::net::TcpListener;
 
+use crate::auth::middleware::auth;
 use actix_web::dev::Server;
 use actix_web::{error, web, HttpResponse};
+use actix_web_lab::middleware::from_fn;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 
@@ -68,12 +70,12 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error
             .service(
                 web::resource("sales")
                     .route(web::get().to(routes::sale))
-                    .route(web::post().to(routes::insert_sale)),
+                    .route(web::post().to(routes::insert_sale).wrap(from_fn(auth))),
             )
             .service(
                 web::resource("nft_tokens")
                     .route(web::get().to(routes::nft_tokens))
-                    .route(web::post().to(routes::insert_nft_token)),
+                    .route(web::post().to(routes::insert_nft_token).wrap(from_fn(auth))),
             )
             .app_data(pool.clone())
             .app_data(query_config)

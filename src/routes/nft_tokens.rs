@@ -1,6 +1,4 @@
-use crate::auth::password;
-use crate::auth::password::{validate_credentials, AuthError};
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{web, HttpResponse};
 use anyhow::Context;
 use battlemon_models::nft::ModelKind;
 use chrono::Utc;
@@ -70,17 +68,11 @@ pub async fn nft_tokens(
     Ok(HttpResponse::Ok().json(RowsJsonReport::from_rows(nft_tokens, filter.limit())))
 }
 
-#[tracing::instrument(name = "Insert nft tokens", skip(nft_token, request, pool))]
+#[tracing::instrument(name = "Insert nft tokens", skip(nft_token, pool))]
 pub async fn insert_nft_token(
     web::Json(nft_token): web::Json<NftToken>,
-    request: HttpRequest,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, NftTokensError> {
-    let credentials =
-        password::basic_authentication(request.headers()).map_err(AuthError::UnexpectedError)?;
-    tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
-    let user_id = validate_credentials(credentials, &pool).await?;
-    tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;
     store_nft_token(nft_token, &mut tx)
         .await
