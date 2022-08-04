@@ -1,10 +1,14 @@
 use serde::{Deserialize, Serialize};
 
+pub use asks::*;
+pub use bids::*;
 pub use health_check::*;
 pub use nft_tokens::*;
 pub use paid::*;
 pub use sale::*;
 
+mod asks;
+mod bids;
 mod health_check;
 mod nft_tokens;
 mod paid;
