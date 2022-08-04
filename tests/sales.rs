@@ -1,4 +1,4 @@
-use battlemon_models::market::{Sale, SaleForInserting};
+use battlemon_models::market::sale::{SaleForDb, SaleForRest};
 use battlemon_rest::routes::RowsJsonReport;
 use chrono::Utc;
 use fake::{Fake, Faker};
@@ -14,7 +14,7 @@ async fn sales_return_200_and_zero_stored_in_database_token() {
 
     let response = app.get_sales("").await;
     assert!(response.status().is_success());
-    let actual_sales: RowsJsonReport<Sale> = response.json().await.unwrap();
+    let actual_sales: RowsJsonReport<SaleForDb> = response.json().await.unwrap();
     assert_eq!(actual_sales.rows.len(), 0);
     assert!(actual_sales.end);
 }
@@ -22,7 +22,7 @@ async fn sales_return_200_and_zero_stored_in_database_token() {
 #[tokio::test]
 async fn sales_return_200_and_one_stored_in_database_token() {
     let app = spawn_app().await;
-    let expected_sale: SaleForInserting = Faker.fake();
+    let expected_sale: SaleForRest = Faker.fake();
     sqlx::query!(
         r#"
         INSERT INTO sales (prev_owner, curr_owner, token_id, price, date)
@@ -40,7 +40,7 @@ async fn sales_return_200_and_one_stored_in_database_token() {
 
     let response = app.get_sales("").await;
     assert!(response.status().is_success());
-    let actual_sales: RowsJsonReport<Sale> = response.json().await.unwrap();
+    let actual_sales: RowsJsonReport<SaleForDb> = response.json().await.unwrap();
     assert_eq!(actual_sales.rows.len(), 1);
     assert_eq!(actual_sales.rows[0].token_id, expected_sale.token_id);
     assert!(actual_sales.end);
@@ -49,7 +49,7 @@ async fn sales_return_200_and_one_stored_in_database_token() {
 #[tokio::test]
 async fn sales_success_and_returns_200_for_different_valid_queries() {
     let app = spawn_app().await;
-    let sales = fake::vec![SaleForInserting; 200];
+    let sales = fake::vec![SaleForRest; 200];
     for sale in sales {
         sqlx::query!(
             r#"
@@ -86,7 +86,7 @@ async fn sales_success_and_returns_200_for_different_valid_queries() {
         let response = app.get_sales(query).await;
         assert_eq!(response.status().as_u16(), 200);
 
-        let actual_sales = response.json::<RowsJsonReport<Sale>>().await.unwrap();
+        let actual_sales = response.json::<RowsJsonReport<SaleForDb>>().await.unwrap();
         assert_eq!(
             actual_sales.rows.len(),
             *expectation,
@@ -103,22 +103,22 @@ async fn sales_success_and_returns_200_for_different_valid_queries() {
 async fn sales_success_with_valid_queries_for_token_id() {
     let app = spawn_app().await;
     let sales_with_id_1 = (0..100).map(|_| {
-        let mut sale: SaleForInserting = Faker.fake();
+        let mut sale: SaleForRest = Faker.fake();
         sale.token_id = "1".to_string();
         sale
     });
     let sales_with_id_2 = (0..50).map(|_| {
-        let mut sale: SaleForInserting = Faker.fake();
+        let mut sale: SaleForRest = Faker.fake();
         sale.token_id = "2".to_string();
         sale
     });
     let sales_with_id_3 = (0..25).map(|_| {
-        let mut sale: SaleForInserting = Faker.fake();
+        let mut sale: SaleForRest = Faker.fake();
         sale.token_id = "3".to_string();
         sale
     });
 
-    let sales: Vec<SaleForInserting> = sales_with_id_1
+    let sales: Vec<SaleForRest> = sales_with_id_1
         .chain(sales_with_id_2)
         .chain(sales_with_id_3)
         .collect();
@@ -156,7 +156,7 @@ async fn sales_success_with_valid_queries_for_token_id() {
         let response = app.get_sales(query).await;
         assert_eq!(response.status().as_u16(), 200);
 
-        let actual_sales = response.json::<RowsJsonReport<Sale>>().await.unwrap();
+        let actual_sales = response.json::<RowsJsonReport<SaleForDb>>().await.unwrap();
         assert_eq!(
             actual_sales.rows.len(),
             *expectation,

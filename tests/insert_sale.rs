@@ -1,7 +1,7 @@
 use crate::helpers::{assert_json_error, spawn_app};
 use anyhow::Context;
 
-use battlemon_models::market::{Sale, SaleForInserting};
+use battlemon_models::market::sale::{SaleForDb, SaleForRest};
 use battlemon_rest::routes::RowsJsonReport;
 use fake::{Fake, Faker};
 use serde_json::json;
@@ -23,7 +23,7 @@ async fn invalid_password_is_rejected() {
     let response = reqwest::Client::new()
         .post(&format!("{}/sales", &app.address))
         .basic_auth(username, Some(password))
-        .json(&Faker.fake::<SaleForInserting>())
+        .json(&Faker.fake::<SaleForRest>())
         .send()
         .await
         .expect("Failed to send request");
@@ -48,7 +48,7 @@ async fn non_existing_user_is_rejected() {
     let response = reqwest::Client::new()
         .post(&format!("{}/sales", &app.address))
         .basic_auth(username, Some(password))
-        .json(&Faker.fake::<SaleForInserting>())
+        .json(&Faker.fake::<SaleForRest>())
         .send()
         .await
         .expect("Failed to send request");
@@ -70,7 +70,7 @@ async fn requests_missing_authorization_are_rejected() {
 
     let response = reqwest::Client::new()
         .post(&format!("{}/sales", app.address))
-        .json(&Faker.fake::<SaleForInserting>())
+        .json(&Faker.fake::<SaleForRest>())
         .send()
         .await
         .expect("Failed to execute request");
@@ -89,7 +89,7 @@ async fn requests_missing_authorization_are_rejected() {
 #[tokio::test]
 async fn insert_valid_sale_success() -> anyhow::Result<()> {
     let app = spawn_app().await;
-    let sale: SaleForInserting = Faker.fake();
+    let sale: SaleForRest = Faker.fake();
     let response = app.post_sale(&sale).await;
 
     let status = response.status();
@@ -105,7 +105,7 @@ async fn insert_valid_sale_success() -> anyhow::Result<()> {
         status, body,
     );
 
-    let response: RowsJsonReport<Sale> = app
+    let response: RowsJsonReport<SaleForDb> = app
         .get_sales(&format!("token_id={}", sale.token_id))
         .await
         .json()
@@ -132,7 +132,7 @@ async fn insert_invalid_sale_rejects_and_returns_400_status() {
 #[tokio::test]
 async fn insert_valid_two_sales_success() -> anyhow::Result<()> {
     let app = spawn_app().await;
-    let sale: SaleForInserting = Faker.fake();
+    let sale: SaleForRest = Faker.fake();
     for _ in 0..2 {
         let response = app.post_sale(&sale).await;
 
@@ -150,7 +150,7 @@ async fn insert_valid_two_sales_success() -> anyhow::Result<()> {
         );
     }
 
-    let response: RowsJsonReport<Sale> = app
+    let response: RowsJsonReport<SaleForDb> = app
         .get_sales(&format!("token_id={}", sale.token_id))
         .await
         .json()
@@ -173,7 +173,7 @@ async fn insert_valid_two_sales_success() -> anyhow::Result<()> {
 #[tokio::test]
 async fn insert_sale_fails_and_return_500_if_there_is_a_fatal_database_error() {
     let app = spawn_app().await;
-    let sale: SaleForInserting = Faker.fake();
+    let sale: SaleForRest = Faker.fake();
     sqlx::query!("ALTER TABLE sales DROP COLUMN prev_owner;",)
         .execute(&app.db_pool)
         .await
