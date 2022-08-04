@@ -3,7 +3,7 @@ use crate::errors::AskError;
 use crate::routes::{PaginationQuery, RowsJsonReport};
 use actix_web::{web, HttpResponse};
 use anyhow::Context;
-use battlemon_models::market::ask_contract::Ask;
+use battlemon_models::market::ask::{AskForDb, AskForRest};
 use sqlx::{PgPool, Postgres, Transaction};
 
 impl TryFrom<PaginationQuery> for AskFilter {
@@ -36,11 +36,11 @@ pub async fn ask(
 }
 
 #[tracing::instrument(name = "Query asks from database", skip(filter, pool))]
-pub async fn query_asks(filter: &AskFilter, pool: &PgPool) -> Result<Vec<Ask>, anyhow::Error> {
+pub async fn query_asks(filter: &AskFilter, pool: &PgPool) -> Result<Vec<AskForDb>, anyhow::Error> {
     let rows = sqlx::query_as!(
-        Ask,
+        AskForDb,
         r#"
-        SELECT id, token_id, expire_at, account_id, approve_id, price
+        SELECT id, token_id,  account_id, approval_id, price
         FROM asks
         WHERE ($1::text IS null OR token_id = $1)
         ORDER BY id LIMIT $2 OFFSET $3;
@@ -57,7 +57,7 @@ pub async fn query_asks(filter: &AskFilter, pool: &PgPool) -> Result<Vec<Ask>, a
 
 #[tracing::instrument(name = "Insert ask", skip(ask, pool))]
 pub async fn insert_ask(
-    web::Json(ask): web::Json<Ask>,
+    web::Json(ask): web::Json<AskForRest>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, AskError> {
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;
@@ -71,17 +71,20 @@ pub async fn insert_ask(
 }
 
 #[tracing::instrument(name = "Store ask to database", skip(tx))]
-pub async fn store_ask(ask: Ask, tx: &mut Transaction<'_, Postgres>) -> Result<(), anyhow::Error> {
+pub async fn store_ask(
+    ask: AskForRest,
+    tx: &mut Transaction<'_, Postgres>,
+) -> Result<(), anyhow::Error> {
     sqlx::query!(
         r#"
-        INSERT INTO asks (, curr_owner, token_id, price, date)
+        INSERT INTO asks (id, token_id, account_id, approval_id, price)
         VALUES ($1, $2, $3, $4, $5)
         "#,
-        ask.prev_owner,
-        ask.curr_owner,
+        ask.id,
         ask.token_id,
+        ask.account_id,
+        ask.approval_id,
         ask.price,
-        Utc::now()
     )
     .execute(tx)
     .await?;
