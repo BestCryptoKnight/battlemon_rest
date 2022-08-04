@@ -28,12 +28,12 @@ impl TryFrom<PaginationQuery> for SaleFilter {
 }
 
 #[tracing::instrument(name = "Handle sales request", skip(filter, pool))]
-pub async fn sale(
+pub async fn get_sales(
     web::Query(filter): web::Query<PaginationQuery>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, SaleError> {
     let filter = filter.try_into().map_err(SaleError::ValidationError)?;
-    let sales = query_sales(&filter, &pool)
+    let sales = get_sales_db(&filter, &pool)
         .await
         .context("Failed to get the sale's data from the database.")?;
 
@@ -41,7 +41,7 @@ pub async fn sale(
 }
 
 #[tracing::instrument(name = "Query sales from database", skip(filter, pool))]
-pub async fn query_sales(
+pub async fn get_sales_db(
     filter: &SaleFilter,
     pool: &PgPool,
 ) -> Result<Vec<SaleForDb>, anyhow::Error> {
@@ -69,7 +69,7 @@ pub async fn insert_sale(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, SaleError> {
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;
-    store_sale(sale, &mut tx)
+    insert_sale_db(sale, &mut tx)
         .await
         .context("Failed to insert the nft token data into the database.")?;
     tx.commit()
@@ -79,7 +79,7 @@ pub async fn insert_sale(
 }
 
 #[tracing::instrument(name = "Store sale to database", skip(tx))]
-pub async fn store_sale(
+pub async fn insert_sale_db(
     sale: SaleForRest,
     tx: &mut Transaction<'_, Postgres>,
 ) -> Result<(), anyhow::Error> {

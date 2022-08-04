@@ -10,6 +10,7 @@ pub use paid_days::*;
 pub use sale::*;
 pub use sale_days::*;
 pub use token_id::*;
+pub use bid::*;
 
 mod ask;
 mod limit;
@@ -22,6 +23,7 @@ mod paid_days;
 mod sale;
 mod sale_days;
 mod token_id;
+mod bid;
 
 pub(self) mod private {
     pub enum Local {}

@@ -10,12 +10,14 @@ pub use auth::*;
 pub use nft_tokens::*;
 pub use paid::*;
 pub use sale::*;
+pub use bid::*;
 
 mod ask;
 mod auth;
 mod nft_tokens;
 mod paid;
 mod sale;
+mod bid;
 
 fn error_chain_fmt(error: &impl Error, f: &mut Formatter<'_>) -> fmt::Result {
     writeln!(f, "{}\n", error)?;

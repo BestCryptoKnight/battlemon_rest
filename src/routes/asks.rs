@@ -23,12 +23,12 @@ impl TryFrom<PaginationQuery> for AskFilter {
 }
 
 #[tracing::instrument(name = "Handle asks request", skip(filter, pool))]
-pub async fn ask(
+pub async fn get_asks(
     web::Query(filter): web::Query<PaginationQuery>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, AskError> {
     let filter = filter.try_into().map_err(AskError::ValidationError)?;
-    let asks = query_asks(&filter, &pool)
+    let asks = get_asks_db(&filter, &pool)
         .await
         .context("Failed to get the ask's data from the database.")?;
 
@@ -36,7 +36,10 @@ pub async fn ask(
 }
 
 #[tracing::instrument(name = "Query asks from database", skip(filter, pool))]
-pub async fn query_asks(filter: &AskFilter, pool: &PgPool) -> Result<Vec<AskForDb>, anyhow::Error> {
+pub async fn get_asks_db(
+    filter: &AskFilter,
+    pool: &PgPool,
+) -> Result<Vec<AskForDb>, anyhow::Error> {
     let rows = sqlx::query_as!(
         AskForDb,
         r#"
@@ -61,7 +64,7 @@ pub async fn insert_ask(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, AskError> {
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;
-    store_ask(ask, &mut tx)
+    insert_ask_db(ask, &mut tx)
         .await
         .context("Failed to insert the ask data into the database.")?;
     tx.commit()
@@ -71,7 +74,7 @@ pub async fn insert_ask(
 }
 
 #[tracing::instrument(name = "Store ask to database", skip(tx))]
-pub async fn store_ask(
+pub async fn insert_ask_db(
     ask: AskForRest,
     tx: &mut Transaction<'_, Postgres>,
 ) -> Result<(), anyhow::Error> {
@@ -85,6 +88,39 @@ pub async fn store_ask(
         ask.account_id,
         ask.approval_id,
         ask.price,
+    )
+    .execute(tx)
+    .await?;
+
+    Ok(())
+}
+
+#[tracing::instrument(name = "Delete ask", skip(ask, pool))]
+pub async fn delete_ask(
+    web::Json(ask): web::Json<AskForRest>,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, AskError> {
+    let mut tx = pool.begin().await.context("Failed to start transaction.")?;
+    delete_ask_db(ask, &mut tx)
+        .await
+        .context("Failed to remove the ask data from the database.")?;
+    tx.commit()
+        .await
+        .context("Failed to commit SQL transaction to complete removing ask.")?;
+    Ok(HttpResponse::Created().finish())
+}
+
+#[tracing::instrument(name = "Remove ask from database", skip(tx))]
+pub async fn delete_ask_db(
+    ask: AskForRest,
+    tx: &mut Transaction<'_, Postgres>,
+) -> Result<(), anyhow::Error> {
+    sqlx::query!(
+        r#"
+        DELETE FROM asks
+        WHERE id = $1 
+        "#,
+        ask.id,
     )
     .execute(tx)
     .await?;

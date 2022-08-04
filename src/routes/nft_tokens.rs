@@ -56,16 +56,41 @@ impl TryFrom<NftTokenQuery> for NftTokenFilter {
 }
 
 #[tracing::instrument(name = "Handle nft tokens request", skip(filter, pool))]
-pub async fn nft_tokens(
+pub async fn get_nft_tokens(
     web::Query(filter): web::Query<NftTokenQuery>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, NftTokensError> {
     let filter: NftTokenFilter = filter.try_into().map_err(NftTokensError::ValidationError)?;
-    let nft_tokens = query_nft_tokens(pool, &filter)
+    let nft_tokens = get_nft_tokens_db(pool, &filter)
         .await
         .context("Failed to get the nft tokens data from database.")?;
 
     Ok(HttpResponse::Ok().json(RowsJsonReport::from_rows(nft_tokens, filter.limit())))
+}
+
+#[tracing::instrument(name = "Query nft tokens from database", skip(filter, pool))]
+pub async fn get_nft_tokens_db(
+    pool: web::Data<PgPool>,
+    filter: &NftTokenFilter,
+) -> Result<Vec<NftToken>, anyhow::Error> {
+    let rows= sqlx::query_as!(
+        NftToken,
+        r#"
+        SELECT token_id, owner_id, media, model as "model: Json<ModelKind>", copies, description, expires_at, issued_at, title, media_hash
+        FROM nft_tokens
+        WHERE ($1::text IS null OR token_id = $1)
+            AND ($2::text IS null OR owner_id = $2)
+        ORDER BY id LIMIT $3 OFFSET $4
+        "#,
+        filter.token_id(),
+        filter.owner_id(),
+        filter.limit() + 1,
+        filter.offset(),
+    )
+        .fetch_all(pool.get_ref())
+        .await?;
+
+    Ok(rows)
 }
 
 #[tracing::instrument(name = "Insert nft tokens", skip(nft_token, pool))]
@@ -74,7 +99,7 @@ pub async fn insert_nft_token(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, NftTokensError> {
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;
-    store_nft_token(nft_token, &mut tx)
+    insert_nft_token_db(nft_token, &mut tx)
         .await
         .context("Failed to insert the nft token data into the database.")?;
     tx.commit()
@@ -84,7 +109,7 @@ pub async fn insert_nft_token(
 }
 
 #[tracing::instrument(name = "Store nft tokens to database", skip(tx))]
-pub async fn store_nft_token(
+pub async fn insert_nft_token_db(
     nft_token: NftToken,
     tx: &mut Transaction<'_, Postgres>,
 ) -> Result<(), anyhow::Error> {
@@ -111,29 +136,4 @@ pub async fn store_nft_token(
     .await?;
 
     Ok(())
-}
-
-#[tracing::instrument(name = "Query nft tokens from database", skip(filter, pool))]
-pub async fn query_nft_tokens(
-    pool: web::Data<PgPool>,
-    filter: &NftTokenFilter,
-) -> Result<Vec<NftToken>, anyhow::Error> {
-    let rows= sqlx::query_as!(
-        NftToken,
-        r#"
-        SELECT token_id, owner_id, media, model as "model: Json<ModelKind>", copies, description, expires_at, issued_at, title, media_hash
-        FROM nft_tokens
-        WHERE ($1::text IS null OR token_id = $1)
-            AND ($2::text IS null OR owner_id = $2)
-        ORDER BY id LIMIT $3 OFFSET $4
-        "#,
-        filter.token_id(),
-        filter.owner_id(),
-        filter.limit() + 1,
-        filter.offset(),
-    )
-    .fetch_all(pool.get_ref())
-    .await?;
-
-    Ok(rows)
 }
