@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse};
 use anyhow::Context;
-use battlemon_models::market::{Sale, SaleForInserting};
+use battlemon_models::market::{sale::SaleForDb, sale::SaleForRest};
 use chrono::Utc;
 use sqlx::{PgPool, Postgres, Transaction};
 
@@ -41,9 +41,12 @@ pub async fn sale(
 }
 
 #[tracing::instrument(name = "Query sales from database", skip(filter, pool))]
-pub async fn query_sales(filter: &SaleFilter, pool: &PgPool) -> Result<Vec<Sale>, anyhow::Error> {
+pub async fn query_sales(
+    filter: &SaleFilter,
+    pool: &PgPool,
+) -> Result<Vec<SaleForDb>, anyhow::Error> {
     let rows = sqlx::query_as!(
-        Sale,
+        SaleForDb,
         r#"
         SELECT id, prev_owner, curr_owner, token_id, price, date
         FROM sales
@@ -62,7 +65,7 @@ pub async fn query_sales(filter: &SaleFilter, pool: &PgPool) -> Result<Vec<Sale>
 
 #[tracing::instrument(name = "Insert sale", skip(sale, pool))]
 pub async fn insert_sale(
-    web::Json(sale): web::Json<SaleForInserting>,
+    web::Json(sale): web::Json<SaleForRest>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, SaleError> {
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;
@@ -77,7 +80,7 @@ pub async fn insert_sale(
 
 #[tracing::instrument(name = "Store sale to database", skip(tx))]
 pub async fn store_sale(
-    sale: SaleForInserting,
+    sale: SaleForRest,
     tx: &mut Transaction<'_, Postgres>,
 ) -> Result<(), anyhow::Error> {
     sqlx::query!(

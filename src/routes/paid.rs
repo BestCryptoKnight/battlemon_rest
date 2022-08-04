@@ -4,7 +4,7 @@ use chrono::{Duration, Utc};
 use rust_decimal::prelude::Zero;
 use rust_decimal::Decimal;
 
-use battlemon_models::market::{Paid, Sale};
+use battlemon_models::market::{paid::Paid, sale::SaleForDb};
 use sqlx::PgPool;
 
 use crate::domain::{Limit, Offset, PaidDays, PaidFilter, ParseToPositiveInt};
@@ -48,11 +48,11 @@ pub async fn paid(
 }
 
 #[tracing::instrument(name = "Query trades for last days from database", skip(pool))]
-async fn query_trades(filter: PaidFilter, pool: &PgPool) -> Result<Vec<Sale>, anyhow::Error> {
+async fn query_trades(filter: PaidFilter, pool: &PgPool) -> Result<Vec<SaleForDb>, anyhow::Error> {
     let now = Utc::now();
     let start_from = now - Duration::days(filter.days());
     let trades = sqlx::query_as!(
-        Sale,
+        SaleForDb,
         r#"
         SELECT id, prev_owner, curr_owner, token_id, price, date
         FROM sales WHERE date >= $1 ORDER BY date OFFSET $2 LIMIT $3;
@@ -67,7 +67,7 @@ async fn query_trades(filter: PaidFilter, pool: &PgPool) -> Result<Vec<Sale>, an
     Ok(trades)
 }
 
-fn calculate_report(trades: &[Sale]) -> (Decimal, Decimal) {
+fn calculate_report(trades: &[SaleForDb]) -> (Decimal, Decimal) {
     let mut top_trade = Decimal::zero();
     let mut total_trade_volume = Decimal::zero();
     for trade in trades {
@@ -86,8 +86,8 @@ mod test {
     use super::*;
     use rust_decimal_macros::dec;
 
-    fn get_sale() -> Sale {
-        Sale {
+    fn get_sale() -> SaleForDb {
+        SaleForDb {
             id: 1,
             prev_owner: "alice.near".to_string(),
             curr_owner: "bob.near".to_string(),
@@ -107,7 +107,7 @@ mod test {
 
     #[test]
     fn calculate_report_one_trade() {
-        let trade = Sale {
+        let trade = SaleForDb {
             price: dec!(10),
             ..get_sale()
         };
@@ -120,12 +120,12 @@ mod test {
 
     #[test]
     fn calculate_report_two_trades() {
-        let trade0 = Sale {
+        let trade0 = SaleForDb {
             price: dec!(1),
             ..get_sale()
         };
 
-        let trade1 = Sale {
+        let trade1 = SaleForDb {
             price: dec!(10),
             ..get_sale()
         };
@@ -138,17 +138,17 @@ mod test {
 
     #[test]
     fn calculate_report_tree_trades() {
-        let trade0 = Sale {
+        let trade0 = SaleForDb {
             price: dec!(5),
             ..get_sale()
         };
 
-        let trade1 = Sale {
+        let trade1 = SaleForDb {
             price: dec!(3),
             ..get_sale()
         };
 
-        let trade2 = Sale {
+        let trade2 = SaleForDb {
             price: dec!(1),
             ..get_sale()
         };
