@@ -1,3 +1,5 @@
+use self::private::New;
+pub use ask::*;
 pub use limit::*;
 pub use nft_token::*;
 pub use nft_token_days::*;
@@ -9,8 +11,7 @@ pub use sale::*;
 pub use sale_days::*;
 pub use token_id::*;
 
-use self::private::New;
-
+mod ask;
 mod limit;
 mod nft_token;
 mod nft_token_days;
