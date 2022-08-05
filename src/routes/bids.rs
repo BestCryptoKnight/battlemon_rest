@@ -82,6 +82,7 @@ pub async fn insert_bid_db(
         r#"
         INSERT INTO bids (id, token_id, account_id, expire_at, create_at, price)
         VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (token_id) DO NOTHING
         "#,
         bid.id,
         bid.token_id,

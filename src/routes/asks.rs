@@ -82,6 +82,7 @@ pub async fn insert_ask_db(
         r#"
         INSERT INTO asks (id, token_id, account_id, approval_id, price)
         VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (token_id) DO NOTHING
         "#,
         ask.id,
         ask.token_id,
