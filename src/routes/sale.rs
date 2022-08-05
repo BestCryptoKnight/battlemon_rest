@@ -63,7 +63,7 @@ pub async fn get_sales_db(
     Ok(rows)
 }
 
-#[tracing::instrument(name = "Insert sale", skip(sale, pool))]
+#[tracing::instrument(name = "Insert sale", skip(pool))]
 pub async fn insert_sale(
     web::Json(sale): web::Json<SaleForRest>,
     pool: web::Data<PgPool>,

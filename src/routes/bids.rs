@@ -58,7 +58,7 @@ pub async fn get_bids_db(
     Ok(rows)
 }
 
-#[tracing::instrument(name = "Insert bid", skip(bid, pool))]
+#[tracing::instrument(name = "Insert bid", skip(pool))]
 pub async fn insert_bid(
     web::Json(bid): web::Json<BidForRest>,
     pool: web::Data<PgPool>,
