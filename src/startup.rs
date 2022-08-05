@@ -66,6 +66,7 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error
         actix_web::App::new()
             .wrap(tracing_actix_web::TracingLogger::default())
             .route("/health_check", web::get().to(routes::health_check))
+            .route("/contracts", web::get().to(routes::contracts))
             .route("/paid", web::get().to(routes::paid))
             .service(
                 web::resource("sales")

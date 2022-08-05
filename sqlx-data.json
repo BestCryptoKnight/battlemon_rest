@@ -52,22 +52,6 @@
     },
     "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales WHERE date >= $1 ORDER BY date OFFSET $2 LIMIT $3;\n        "
   },
-  "0e76c732979f8eaeef63e2213a72dc049373b66a41f49782bfbd844925b0441e": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "Text",
-          "Text",
-          "Int8",
-          "Numeric"
-        ]
-      }
-    },
-    "query": "\n        INSERT INTO asks (id, token_id, account_id, approval_id, price)\n        VALUES ($1, $2, $3, $4, $5)\n        ON CONFLICT (token_id) DO NOTHING\n        "
-  },
   "16552203a3d6be66354a373eeeb122424a9447a98162888677a1c736765de927": {
     "describe": {
       "columns": [
@@ -177,6 +161,22 @@
       }
     },
     "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales\n        WHERE ($1::text IS null OR token_id = $1)\n        ORDER BY id LIMIT $2 OFFSET $3;\n        "
+  },
+  "3548620895d97be938ebd3506e73e1f126f1d5a2e41a90d766b9b496c9a5bd0c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Text",
+          "Text",
+          "Int8",
+          "Numeric"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO asks (id, token_id, account_id, approval_id, price)\n        VALUES ($1, $2, $3, $4, $5)\n        ON CONFLICT (id) DO NOTHING\n        "
   },
   "42e858e24d84a1fcb90873613426d0e284c587f51e3929bc2d2e5648b1da50ce": {
     "describe": {
@@ -305,6 +305,23 @@
     },
     "query": "\n        DELETE FROM asks\n        WHERE id = $1 \n        "
   },
+  "92c74eca26be7f6244ec95b714cbfdf4029db1cc6b6e4b0c177b7e6f7438dd68": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Text",
+          "Text",
+          "Timestamptz",
+          "Timestamptz",
+          "Numeric"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO bids (id, token_id, account_id, expire_at, create_at, price)\n        VALUES ($1, $2, $3, $4, $5, $6)\n        ON CONFLICT (id) DO NOTHING\n        "
+  },
   "aa1048e917e7918b479b36c5b9c3947146c499a1d4d7a85c7c1bcdddce57e219": {
     "describe": {
       "columns": [
@@ -382,22 +399,5 @@
       }
     },
     "query": "\n        SELECT id, token_id,  account_id, expire_at, create_at, price\n        FROM bids\n        WHERE ($1::text IS null OR token_id = $1)\n        ORDER BY id LIMIT $2 OFFSET $3;\n        "
-  },
-  "d30aa5e20bc1a949e7cbfead3e0fd924efcd101de9314f740e86ae4af95c5ea1": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "Text",
-          "Text",
-          "Timestamptz",
-          "Timestamptz",
-          "Numeric"
-        ]
-      }
-    },
-    "query": "\n        INSERT INTO bids (id, token_id, account_id, expire_at, create_at, price)\n        VALUES ($1, $2, $3, $4, $5, $6)\n        ON CONFLICT (token_id) DO NOTHING\n        "
   }
 }
