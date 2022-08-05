@@ -83,6 +83,12 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error
                     .route(web::post().to(routes::insert_ask).wrap(from_fn(auth)))
                     .route(web::delete().to(routes::delete_ask).wrap(from_fn(auth))),
             )
+            .service(
+                web::resource("bids")
+                    .route(web::get().to(routes::get_bids))
+                    .route(web::post().to(routes::insert_bid).wrap(from_fn(auth)))
+                    .route(web::delete().to(routes::delete_bid).wrap(from_fn(auth))),
+            )
             .app_data(pool.clone())
             .app_data(query_config)
             .app_data(json_config)
