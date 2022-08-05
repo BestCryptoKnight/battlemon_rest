@@ -52,6 +52,64 @@
     },
     "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales WHERE date >= $1 ORDER BY date OFFSET $2 LIMIT $3;\n        "
   },
+  "16552203a3d6be66354a373eeeb122424a9447a98162888677a1c736765de927": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "token_id",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "account_id",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "approval_id",
+          "ordinal": 3,
+          "type_info": "Int8"
+        },
+        {
+          "name": "price",
+          "ordinal": 4,
+          "type_info": "Numeric"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "\n        SELECT id, token_id,  account_id, approval_id, price\n        FROM asks\n        WHERE ($1::text IS null OR token_id = $1)\n        ORDER BY id LIMIT $2 OFFSET $3;\n        "
+  },
+  "1f2f999c7ca598fb1766f9f249b92e08b3a5344f9865a109225d561f7766e946": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n        DELETE FROM bids\n        WHERE id = $1 \n        "
+  },
   "2cc725c2abc832ba64842287f7ca54deff35407e224e4ef99f7a853aec5bec3a": {
     "describe": {
       "columns": [
@@ -181,6 +239,22 @@
     },
     "query": "\n        SELECT token_id, owner_id, media, model as \"model: Json<ModelKind>\", copies, description, expires_at, issued_at, title, media_hash\n        FROM nft_tokens\n        WHERE ($1::text IS null OR token_id = $1)\n            AND ($2::text IS null OR owner_id = $2)\n        ORDER BY id LIMIT $3 OFFSET $4\n        "
   },
+  "5d96b8ff13daaa8f2b919a9bbb0e2606ff0fcbee48a835519381b32bd7df427a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Text",
+          "Text",
+          "Int8",
+          "Numeric"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO asks (id, token_id, account_id, approval_id, price)\n        VALUES ($1, $2, $3, $4, $5)\n        "
+  },
   "60213cfabc26229fce5a0f420218b244ddd369fcc9be8cb9a9c14222412e2812": {
     "describe": {
       "columns": [],
@@ -219,6 +293,18 @@
     },
     "query": "\n        INSERT INTO sales (prev_owner, curr_owner, token_id, price, date)\n        VALUES ($1, $2, $3, $4, $5)\n        "
   },
+  "791060d2a8c402a323370547b90641e6a3d27d62f9f88679be25149be3165f19": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n        DELETE FROM asks\n        WHERE id = $1 \n        "
+  },
   "aa1048e917e7918b479b36c5b9c3947146c499a1d4d7a85c7c1bcdddce57e219": {
     "describe": {
       "columns": [
@@ -244,5 +330,74 @@
       }
     },
     "query": "SELECT user_id, password_hash FROM users WHERE username = $1"
+  },
+  "c0e2bbf2663c9f7a7ab6ee44cb593495b4ddad08f1ca2bf1e4ff08117d2c0eee": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "token_id",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "account_id",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "expire_at",
+          "ordinal": 3,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "create_at",
+          "ordinal": 4,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "price",
+          "ordinal": 5,
+          "type_info": "Numeric"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "\n        SELECT id, token_id,  account_id, expire_at, create_at, price\n        FROM bids\n        WHERE ($1::text IS null OR token_id = $1)\n        ORDER BY id LIMIT $2 OFFSET $3;\n        "
+  },
+  "d158394dbbda2620a2856ff8f91f0a8e546c4ff78e0df44836d6e40244e54be9": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Text",
+          "Text",
+          "Timestamptz",
+          "Timestamptz",
+          "Numeric"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO bids (id, token_id, account_id, expire_at, create_at, price)\n        VALUES ($1, $2, $3, $4, $5, $6)\n        "
   }
 }
