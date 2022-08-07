@@ -1,4 +1,4 @@
 create table contracts
 (
-    contracts jsonb
+    contracts_config jsonb not null
 )
