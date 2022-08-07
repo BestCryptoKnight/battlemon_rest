@@ -68,7 +68,7 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error
             .route("health_check", web::get().to(routes::health_check))
             .service(
                 web::resource("contracts")
-                    .route(web::get().to(routes::contracts))
+                    .route(web::get().to(routes::get_contracts))
                     .route(web::post().to(routes::insert_contracts).wrap(from_fn(auth))),
             )
             .route("paid", web::get().to(routes::paid))

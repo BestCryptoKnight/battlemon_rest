@@ -5,8 +5,8 @@ use battlemon_models::config::ContractConfig;
 use sqlx::{types::Json, PgPool, Postgres, Transaction};
 
 #[tracing::instrument(name = "List contracts ids", skip(pool))]
-pub async fn contracts(pool: web::Data<PgPool>) -> Result<HttpResponse, ContractError> {
-    let contracts = get_contracts(pool)
+pub async fn get_contracts(pool: web::Data<PgPool>) -> Result<HttpResponse, ContractError> {
+    let contracts = get_contracts_db(pool)
         .await
         .context("Failed to get the contracts id data from database.")?;
 
@@ -18,7 +18,7 @@ struct Record {
 }
 
 #[tracing::instrument(name = "Query contracts ids from database", skip(pool))]
-pub async fn get_contracts(pool: web::Data<PgPool>) -> Result<ContractConfig, anyhow::Error> {
+pub async fn get_contracts_db(pool: web::Data<PgPool>) -> Result<ContractConfig, anyhow::Error> {
     let record = sqlx::query_as!(
         Record,
         r#"
@@ -51,6 +51,14 @@ pub async fn upsert_contracts_db(
     contracts_config: ContractConfig,
     tx: &mut Transaction<'_, Postgres>,
 ) -> Result<(), anyhow::Error> {
+    sqlx::query!(
+        r#"
+        DELETE FROM contracts;
+        "#
+    )
+    .execute(&mut *tx)
+    .await?;
+
     sqlx::query_as!(
         ContractConfig,
         r#"
