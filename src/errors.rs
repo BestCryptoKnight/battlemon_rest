@@ -7,17 +7,19 @@ use serde::{Deserialize, Serialize};
 
 pub use ask::*;
 pub use auth::*;
+pub use bid::*;
+pub use contract::*;
 pub use nft_tokens::*;
 pub use paid::*;
 pub use sale::*;
-pub use bid::*;
 
 mod ask;
 mod auth;
+mod bid;
+mod contract;
 mod nft_tokens;
 mod paid;
 mod sale;
-mod bid;
 
 fn error_chain_fmt(error: &impl Error, f: &mut Formatter<'_>) -> fmt::Result {
     writeln!(f, "{}\n", error)?;
