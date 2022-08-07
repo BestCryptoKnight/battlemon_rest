@@ -52,6 +52,24 @@
     },
     "query": "\n        SELECT id, prev_owner, curr_owner, token_id, price, date\n        FROM sales WHERE date >= $1 ORDER BY date OFFSET $2 LIMIT $3;\n        "
   },
+  "0e7bd2d9765e53492cdaa320bcefc1a29a027bd6633ba64ed3832c0b4f8c5e5e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "contracts_config: Json<ContractConfig>",
+          "ordinal": 0,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "\n        SELECT contracts_config as \"contracts_config: Json<ContractConfig>\" FROM contracts\n        "
+  },
   "16552203a3d6be66354a373eeeb122424a9447a98162888677a1c736765de927": {
     "describe": {
       "columns": [
@@ -399,5 +417,17 @@
       }
     },
     "query": "\n        SELECT id, token_id,  account_id, expire_at, create_at, price\n        FROM bids\n        WHERE ($1::text IS null OR token_id = $1)\n        ORDER BY id LIMIT $2 OFFSET $3;\n        "
+  },
+  "c82759b5ecb1a5d86057b1fc88d365c9411db0c2f8549c31ad6ae5e2098aea67": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO contracts (contracts_config)\n        VALUES ($1)\n        ON CONFLICT (contracts_config) DO UPDATE\n        SET contracts_config = $1\n        "
   }
 }
