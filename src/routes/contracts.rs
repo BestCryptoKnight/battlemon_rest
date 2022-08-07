@@ -64,8 +64,6 @@ pub async fn upsert_contracts_db(
         r#"
         INSERT INTO contracts (contracts_config)
         VALUES ($1)
-        ON CONFLICT (contracts_config) DO UPDATE
-        SET contracts_config = $1
         "#,
         Json(contracts_config) as _,
     )
