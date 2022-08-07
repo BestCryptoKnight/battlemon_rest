@@ -295,6 +295,18 @@
     },
     "query": "\n        INSERT INTO nft_tokens (owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n        ON CONFLICT (token_id) DO NOTHING\n        "
   },
+  "66a4c859608548955d5d04d6ec04f49a207b8cfd21e158aeff3252ccad259e46": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO contracts (contracts_config)\n        VALUES ($1)\n        "
+  },
   "6a6b7f82929ed1205cbaa5b7a8db800eaf44fdf06cb618517a60c22edd3d623b": {
     "describe": {
       "columns": [],
@@ -417,18 +429,6 @@
       }
     },
     "query": "\n        SELECT id, token_id,  account_id, expire_at, create_at, price\n        FROM bids\n        WHERE ($1::text IS null OR token_id = $1)\n        ORDER BY id LIMIT $2 OFFSET $3;\n        "
-  },
-  "c82759b5ecb1a5d86057b1fc88d365c9411db0c2f8549c31ad6ae5e2098aea67": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Jsonb"
-        ]
-      }
-    },
-    "query": "\n        INSERT INTO contracts (contracts_config)\n        VALUES ($1)\n        ON CONFLICT (contracts_config) DO UPDATE\n        SET contracts_config = $1\n        "
   },
   "f57daa6028d9ed19ded020845db4edc0acb889a29928c7c145d0295470b5ceeb": {
     "describe": {
