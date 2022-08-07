@@ -429,5 +429,15 @@
       }
     },
     "query": "\n        INSERT INTO contracts (contracts_config)\n        VALUES ($1)\n        ON CONFLICT (contracts_config) DO UPDATE\n        SET contracts_config = $1\n        "
+  },
+  "f57daa6028d9ed19ded020845db4edc0acb889a29928c7c145d0295470b5ceeb": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "\n        DELETE FROM contracts;\n        "
   }
 }
