@@ -378,6 +378,27 @@
     },
     "query": "SELECT user_id, password_hash FROM users WHERE username = $1"
   },
+  "bb1c0d9707c1463f84f4e400f345730993594763e6e0886a8f3dfa707f67a6d5": {
+    "describe": {
+      "columns": [
+        {
+          "name": "token_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "\n        SELECT token_id\n        FROM nft_tokens\n        WHERE owner_id = $1 AND token_id = ANY($2)\n        "
+  },
   "c0e2bbf2663c9f7a7ab6ee44cb593495b4ddad08f1ca2bf1e4ff08117d2c0eee": {
     "describe": {
       "columns": [
