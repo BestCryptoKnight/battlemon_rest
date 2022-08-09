@@ -41,6 +41,10 @@ impl TestApp {
             .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
     }
 
+    pub async fn post<T: Serialize>(&self, path: &str, json: &T) -> Response {
+        self.builder_post_json(path, json).await
+    }
+
     fn builder_post_json<T: Serialize>(&self, path: &str, json: &T) -> RequestBuilder {
         Client::new()
             .post(&format!("{}/{path}", self.address))
