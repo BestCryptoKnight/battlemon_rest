@@ -94,6 +94,12 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error
                     .route(web::post().to(routes::insert_bid).wrap(from_fn(auth)))
                     .route(web::delete().to(routes::delete_bid).wrap(from_fn(auth))),
             )
+            .service(
+                web::scope("users")
+                    .service(web::scope("{user_id}").service(
+                        web::resource("is_owner").route(web::post().to(routes::is_owner)),
+                    )),
+            )
             .app_data(pool.clone())
             .app_data(query_config)
             .app_data(json_config)

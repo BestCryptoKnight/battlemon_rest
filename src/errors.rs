@@ -12,11 +12,13 @@ pub use contract::*;
 pub use nft_tokens::*;
 pub use paid::*;
 pub use sale::*;
+pub use is_owner::*;
 
 mod ask;
 mod auth;
 mod bid;
 mod contract;
+mod is_owner;
 mod nft_tokens;
 mod paid;
 mod sale;

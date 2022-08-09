@@ -42,7 +42,10 @@ impl TestApp {
     }
 
     pub async fn post<T: Serialize>(&self, path: &str, json: &T) -> Response {
-        self.builder_post_json(path, json).await
+        self.builder_post_json(path, json)
+            .send()
+            .await
+            .unwrap_or_else(|e| panic!("Failed to execute request {:#?}", e))
     }
 
     fn builder_post_json<T: Serialize>(&self, path: &str, json: &T) -> RequestBuilder {
