@@ -43,25 +43,22 @@ pub fn get_connection_pool(config: &DatabaseSettings) -> PgPool {
         .connect_lazy_with(config.with_db())
 }
 
+fn add_default_error_body(err: impl std::error::Error + 'static) -> actix_web::Error {
+    let json_body = serde_json::json!({
+        "error": err.to_string(),
+    });
+    error::InternalError::from_response(err, HttpResponse::BadRequest().json(json_body)).into()
+}
+
 #[tracing::instrument(name = "Running application", skip(listener, pool))]
 pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error> {
     let pool = web::Data::new(pool);
     let server = actix_web::HttpServer::new(move || {
-        let query_config = web::QueryConfig::default().error_handler(|err, _req| {
-            let json_body = serde_json::json!({
-                "error": err.to_string(),
-            });
-            error::InternalError::from_response(err, HttpResponse::BadRequest().json(json_body))
-                .into()
-        });
+        let query_config =
+            web::QueryConfig::default().error_handler(|err, _req| add_default_error_body(err));
 
-        let json_config = web::JsonConfig::default().error_handler(|err, _req| {
-            let json_body = serde_json::json!({
-                "error": err.to_string(),
-            });
-            error::InternalError::from_response(err, HttpResponse::BadRequest().json(json_body))
-                .into()
-        });
+        let json_config =
+            web::JsonConfig::default().error_handler(|err, _req| add_default_error_body(err));
 
         actix_web::App::new()
             .wrap(tracing_actix_web::TracingLogger::default())
