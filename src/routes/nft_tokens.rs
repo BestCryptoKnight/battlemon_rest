@@ -1,8 +1,8 @@
 use actix_web::{web, HttpResponse};
 use anyhow::Context;
-use battlemon_models::nft::ModelKind;
+use battlemon_models::nft::{ModelKind, NftTokenForRest};
 use chrono::Utc;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use sqlx::types::Json;
 use sqlx::{PgPool, Postgres, Transaction};
 
@@ -21,20 +21,6 @@ pub struct NftTokenQuery {
     pub owner_id: Option<String>,
     pub token_id: Option<String>,
     pub nft_trait: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NftToken {
-    pub token_id: String,
-    pub owner_id: String,
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub media: String,
-    pub media_hash: Option<String>,
-    pub copies: Option<String>,
-    pub issued_at: Option<String>,
-    pub expires_at: Option<String>,
-    pub model: Json<ModelKind>,
 }
 
 impl TryFrom<NftTokenQuery> for NftTokenFilter {
@@ -72,9 +58,9 @@ pub async fn get_nft_tokens(
 pub async fn get_nft_tokens_db(
     pool: web::Data<PgPool>,
     filter: &NftTokenFilter,
-) -> Result<Vec<NftToken>, anyhow::Error> {
+) -> Result<Vec<NftTokenForRest>, anyhow::Error> {
     let rows= sqlx::query_as!(
-        NftToken,
+        NftTokenForRest,
         r#"
         SELECT token_id, owner_id, media, model as "model: Json<ModelKind>", copies, description, expires_at, issued_at, title, media_hash
         FROM nft_tokens
@@ -95,7 +81,7 @@ pub async fn get_nft_tokens_db(
 
 #[tracing::instrument(name = "Insert nft tokens", skip(nft_token, pool))]
 pub async fn insert_nft_token(
-    web::Json(nft_token): web::Json<NftToken>,
+    web::Json(nft_token): web::Json<NftTokenForRest>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, NftTokensError> {
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;
@@ -110,7 +96,7 @@ pub async fn insert_nft_token(
 
 #[tracing::instrument(name = "Store nft tokens to database", skip(tx))]
 pub async fn insert_nft_token_db(
-    nft_token: NftToken,
+    nft_token: NftTokenForRest,
     tx: &mut Transaction<'_, Postgres>,
 ) -> Result<(), anyhow::Error> {
     sqlx::query_as!(

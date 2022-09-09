@@ -1,7 +1,8 @@
 use crate::helpers::{assert_json_error, spawn_app};
 use anyhow::Context;
 
-use battlemon_rest::routes::{NftToken, RowsJsonReport};
+use battlemon_models::nft::NftTokenForRest;
+use battlemon_rest::routes::RowsJsonReport;
 use fake::Fake;
 use serde_json::json;
 use uuid::Uuid;
@@ -104,7 +105,7 @@ async fn insert_valid_nft_token_success() -> anyhow::Result<()> {
         status, body,
     );
 
-    let response: RowsJsonReport<NftToken> = app
+    let response: RowsJsonReport<NftTokenForRest> = app
         .get_nft_tokens(&format!("token_id={}", token.token_id))
         .await
         .json()
@@ -139,7 +140,7 @@ async fn insert_valid_two_equals_nft_token_reject_without_error_response() -> an
         );
     }
 
-    let response: RowsJsonReport<NftToken> = app
+    let response: RowsJsonReport<NftTokenForRest> = app
         .get_nft_tokens(&format!("token_id={}", token.token_id))
         .await
         .json()

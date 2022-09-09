@@ -1,6 +1,6 @@
 use fake::faker::address::en::Geohash;
 
-use battlemon_models::nft::{Lemon, ModelKind};
+use battlemon_models::nft::{FromTraitWeights, Lemon, ModelKind};
 use fake::{Dummy, Fake};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -17,10 +17,10 @@ pub struct AliceNftToken;
 
 impl Dummy<AliceNftToken> for NftToken {
     fn dummy_with_rng<R: Rng + ?Sized>(_: &AliceNftToken, rng: &mut R) -> Self {
-        let traits_config = fake::vec![u8; 4]
+        let traits_config = fake::vec![u8; 5]
             .try_into()
-            .expect("Couldn't convert to the array with length 4");
-        let model = ModelKind::Lemon(Lemon::from_random(&traits_config));
+            .expect("Couldn't convert to the array with length 5");
+        let model = ModelKind::Lemon(Lemon::from_trait_weights(&"".to_string(), &traits_config));
         let token_id = rng.gen::<u64>().to_string();
 
         Self {

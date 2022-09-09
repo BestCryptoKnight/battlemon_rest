@@ -1,8 +1,9 @@
+use battlemon_models::nft::NftTokenForRest;
 use fake::Fake;
 use sqlx::types::{chrono::Utc, Json};
 
 use crate::dummies::{AliceNftToken, BobNftToken, DannyNftToken};
-use battlemon_rest::routes::{NftToken, RowsJsonReport};
+use battlemon_rest::routes::RowsJsonReport;
 use helpers::{assert_json_error, spawn_app};
 
 mod dummies;
@@ -86,7 +87,7 @@ async fn nft_tokens_success_with_valid_queries() {
             "Response status for query `{}` doesn't equal `200`",
             query
         );
-        let tokens: RowsJsonReport<NftToken> = response
+        let tokens: RowsJsonReport<NftTokenForRest> = response
             .json()
             .await
             .expect("Couldn't parse response into `NftToken`");
@@ -137,7 +138,7 @@ async fn nft_tokens_for_valid_query_by_token_id_returns_200() {
             token.owner_id,
             token.token_id,
             token.media,
-            Json(token.model) as _,
+            Json(&token.model) as _,
             Utc::now()
         )
         .execute(&app.db_pool)
@@ -151,7 +152,7 @@ async fn nft_tokens_for_valid_query_by_token_id_returns_200() {
         assert!(response.status().is_success());
 
         let nft_tokens_json = response
-            .json::<RowsJsonReport<NftToken>>()
+            .json::<RowsJsonReport<NftTokenForRest>>()
             .await
             .expect("Couldn't deserialize response into `RowsJsonReport<NftToken>`");
         assert_eq!(

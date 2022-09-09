@@ -413,6 +413,7 @@ dependencies = [
  "rand 0.8.5",
  "rust_decimal",
  "serde",
+ "sqlx-core",
 ]
 
 [[package]]
@@ -2817,7 +2818,6 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "874e93a365a598dc3dadb197565952cb143ae4aa716f7bcc933a8d836f6bf89f"
 dependencies = [
- "actix-rt",
  "once_cell",
  "tokio",
  "tokio-rustls",
