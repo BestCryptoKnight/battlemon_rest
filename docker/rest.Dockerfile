@@ -1,4 +1,4 @@
-FROM lukemathwalker/cargo-chef:latest-rust-1.62.1-slim-bullseye AS chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.63.0-slim-bullseye AS chef
 WORKDIR /app
 RUN apt-get update -y \
     && apt-get install -y  \
