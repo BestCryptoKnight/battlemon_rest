@@ -123,3 +123,37 @@ pub async fn insert_nft_token_db(
 
     Ok(())
 }
+
+#[tracing::instrument(name = "Update nft tokens", skip(nft_token, pool))]
+pub async fn update_nft_token(
+    web::Json(nft_token): web::Json<NftTokenForRest>,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, NftTokensError> {
+    let mut tx = pool.begin().await.context("Failed to start transaction.")?;
+    update_nft_token_db(nft_token, &mut tx)
+        .await
+        .context("Failed to insert the nft token data into the database.")?;
+    tx.commit()
+        .await
+        .context("Failed to commit SQL transaction to store a new subscriber.")?;
+    Ok(HttpResponse::Created().finish())
+}
+
+#[tracing::instrument(name = "Store nft tokens to database", skip(tx))]
+pub async fn update_nft_token_db(
+    nft_token: NftTokenForRest,
+    tx: &mut Transaction<'_, Postgres>,
+) -> Result<(), anyhow::Error> {
+    sqlx::query_as!(
+        NftToken,
+        r#"
+        UPDATE nft_tokens
+        SET model = $1
+        "#,
+        Json(nft_token.model) as _,
+    )
+    .execute(tx)
+    .await?;
+
+    Ok(())
+}

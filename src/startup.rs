@@ -77,7 +77,12 @@ pub fn run(listener: TcpListener, pool: PgPool) -> Result<Server, std::io::Error
             .service(
                 web::resource("nft_tokens")
                     .route(web::get().to(routes::get_nft_tokens))
-                    .route(web::post().to(routes::insert_nft_token).wrap(from_fn(auth))),
+                    .route(web::post().to(routes::insert_nft_token).wrap(from_fn(auth)))
+                    .route(
+                        web::patch()
+                            .to(routes::update_nft_token)
+                            .wrap(from_fn(auth)),
+                    ),
             )
             .service(
                 web::resource("asks")
