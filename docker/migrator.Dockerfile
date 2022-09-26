@@ -1,4 +1,4 @@
-FROM rust:1.63.0-slim-bullseye
+FROM rust:1.64.0-slim-bullseye
 WORKDIR /prj
 
 RUN apt update -y \

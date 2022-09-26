@@ -451,6 +451,18 @@
     },
     "query": "\n        SELECT id, token_id,  account_id, expire_at, create_at, price\n        FROM bids\n        WHERE ($1::text IS null OR token_id = $1)\n        ORDER BY id LIMIT $2 OFFSET $3;\n        "
   },
+  "d8743255cb9f4557d08d9f301945c37500106d704e42f381efbd8b47dcecda98": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "\n        UPDATE nft_tokens\n        SET model = $1\n        "
+  },
   "f57daa6028d9ed19ded020845db4edc0acb889a29928c7c145d0295470b5ceeb": {
     "describe": {
       "columns": [],
