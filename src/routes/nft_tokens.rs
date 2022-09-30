@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse};
 use anyhow::Context;
-use battlemon_models::nft::{ModelKind, NftTokenForRest};
+use battlemon_models::nft::{ModelKind, NftKind, NftTokenForRest};
 use chrono::Utc;
 use serde::Deserialize;
 use sqlx::types::Json;
@@ -21,6 +21,7 @@ pub struct NftTokenQuery {
     pub owner_id: Option<String>,
     pub token_id: Option<String>,
     pub nft_trait: Option<String>,
+    pub nft_kind: Option<NftKind>,
 }
 
 impl TryFrom<NftTokenQuery> for NftTokenFilter {
@@ -30,6 +31,13 @@ impl TryFrom<NftTokenQuery> for NftTokenFilter {
         let owner_id = NftTokenOwnerId::parse(query.owner_id)?;
         let limit = Limit::parse(query.limit)?;
         let offset = Offset::parse(query.offset)?;
+        let nft_kind = query.nft_kind.map(|k| {
+            serde_json::to_value(k)
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_string()
+        });
         NftTokenDays::parse(query.days)?;
 
         Ok(Self {
@@ -37,6 +45,7 @@ impl TryFrom<NftTokenQuery> for NftTokenFilter {
             owner_id,
             limit,
             offset,
+            nft_kind,
         })
     }
 }
@@ -59,6 +68,7 @@ pub async fn get_nft_tokens_db(
     pool: web::Data<PgPool>,
     filter: &NftTokenFilter,
 ) -> Result<Vec<NftTokenForRest>, anyhow::Error> {
+    dbg!(filter.nft_kind());
     let rows= sqlx::query_as!(
         NftTokenForRest,
         r#"
@@ -66,10 +76,12 @@ pub async fn get_nft_tokens_db(
         FROM nft_tokens
         WHERE ($1::text IS null OR token_id = $1)
             AND ($2::text IS null OR owner_id = $2)
-        ORDER BY id LIMIT $3 OFFSET $4
+            AND ($3::text IS null OR model->>'kind' = $3)
+        ORDER BY id LIMIT $4 OFFSET $5
         "#,
         filter.token_id(),
         filter.owner_id(),
+        filter.nft_kind(),
         filter.limit() + 1,
         filter.offset(),
     )

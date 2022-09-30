@@ -170,3 +170,41 @@ async fn nft_tokens_for_valid_query_by_token_id_returns_200() {
         );
     }
 }
+
+#[tokio::test]
+async fn nft_tokens_for_valid_query_by_nft_kind_returns_200() {
+    let app = spawn_app().await;
+    let tokens: Vec<dummies::NftToken> = (0..50).map(|_| AliceNftToken.fake()).collect();
+
+    for token in &tokens {
+        sqlx::query!(
+            r#"
+            INSERT INTO nft_tokens (owner_id, token_id, media, model, db_created_at)
+            VALUES ($1, $2, $3, $4, $5)
+            "#,
+            token.owner_id,
+            token.token_id,
+            token.media,
+            Json(&token.model) as _,
+            Utc::now()
+        )
+        .execute(&app.db_pool)
+        .await
+        .unwrap();
+    }
+
+    let query = "nft_kind=lemon";
+    let response = app.get_nft_tokens(query).await;
+    assert!(response.status().is_success());
+
+    let nft_tokens_json = response
+        .json::<RowsJsonReport<NftTokenForRest>>()
+        .await
+        .expect("Couldn't deserialize response into `RowsJsonReport<NftToken>`");
+    assert_eq!(
+        nft_tokens_json.rows.len(),
+        50,
+        "Expected length `50` for query `{}` and actual doesn't equal.",
+        query
+    );
+}
