@@ -1,5 +1,83 @@
 {
   "db": "PostgreSQL",
+  "00a326411c2ea473d91590aae4a16097d1fe9b18d917ff61e0149c550232bace": {
+    "describe": {
+      "columns": [
+        {
+          "name": "token_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "owner_id",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "media",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "model: Json<ModelKind>",
+          "ordinal": 3,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "copies",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "expires_at",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "issued_at",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 8,
+          "type_info": "Text"
+        },
+        {
+          "name": "media_hash",
+          "ordinal": 9,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "\n        SELECT token_id, owner_id, media, model as \"model: Json<ModelKind>\", copies, description, expires_at, issued_at, title, media_hash\n        FROM nft_tokens\n        WHERE ($1::text IS null OR token_id = $1)\n            AND ($2::text IS null OR owner_id = $2)\n            AND ($3::text IS null OR model->>'kind' = $3)\n        ORDER BY id LIMIT $4 OFFSET $5\n        "
+  },
   "03f6f5e493ceb87362a2c80a0b2b158fa837005aa2a3c7fd9fb4588ddebc8a53": {
     "describe": {
       "columns": [
@@ -195,83 +273,6 @@
       }
     },
     "query": "\n        INSERT INTO asks (id, token_id, account_id, approval_id, price)\n        VALUES ($1, $2, $3, $4, $5)\n        ON CONFLICT (id) DO NOTHING\n        "
-  },
-  "42e858e24d84a1fcb90873613426d0e284c587f51e3929bc2d2e5648b1da50ce": {
-    "describe": {
-      "columns": [
-        {
-          "name": "token_id",
-          "ordinal": 0,
-          "type_info": "Text"
-        },
-        {
-          "name": "owner_id",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "media",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "model: Json<ModelKind>",
-          "ordinal": 3,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "copies",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "description",
-          "ordinal": 5,
-          "type_info": "Text"
-        },
-        {
-          "name": "expires_at",
-          "ordinal": 6,
-          "type_info": "Text"
-        },
-        {
-          "name": "issued_at",
-          "ordinal": 7,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 8,
-          "type_info": "Text"
-        },
-        {
-          "name": "media_hash",
-          "ordinal": 9,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Int8",
-          "Int8"
-        ]
-      }
-    },
-    "query": "\n        SELECT token_id, owner_id, media, model as \"model: Json<ModelKind>\", copies, description, expires_at, issued_at, title, media_hash\n        FROM nft_tokens\n        WHERE ($1::text IS null OR token_id = $1)\n            AND ($2::text IS null OR owner_id = $2)\n        ORDER BY id LIMIT $3 OFFSET $4\n        "
   },
   "60213cfabc26229fce5a0f420218b244ddd369fcc9be8cb9a9c14222412e2812": {
     "describe": {
