@@ -274,28 +274,6 @@
     },
     "query": "\n        INSERT INTO asks (id, token_id, account_id, approval_id, price)\n        VALUES ($1, $2, $3, $4, $5)\n        ON CONFLICT (id) DO NOTHING\n        "
   },
-  "60213cfabc26229fce5a0f420218b244ddd369fcc9be8cb9a9c14222412e2812": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Jsonb",
-          "Timestamptz"
-        ]
-      }
-    },
-    "query": "\n        INSERT INTO nft_tokens (owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n        ON CONFLICT (token_id) DO NOTHING\n        "
-  },
   "66a4c859608548955d5d04d6ec04f49a207b8cfd21e158aeff3252ccad259e46": {
     "describe": {
       "columns": [],
@@ -463,6 +441,28 @@
       }
     },
     "query": "\n        UPDATE nft_tokens\n        SET model = $1\n        "
+  },
+  "e990ee82fc15bed39268ad613f16541714d89d0344d8ad05e537fb7068deac75": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Jsonb",
+          "Timestamptz"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO nft_tokens (owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n            ON CONFLICT (token_id) DO NOTHING\n            "
   },
   "f57daa6028d9ed19ded020845db4edc0acb889a29928c7c145d0295470b5ceeb": {
     "describe": {
