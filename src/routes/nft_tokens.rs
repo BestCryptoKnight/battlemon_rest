@@ -91,13 +91,13 @@ pub async fn get_nft_tokens_db(
     Ok(rows)
 }
 
-#[tracing::instrument(name = "Insert nft tokens", skip(nft_token, pool))]
+#[tracing::instrument(name = "Insert nft tokens", skip(nft_tokens, pool))]
 pub async fn insert_nft_token(
-    web::Json(nft_token): web::Json<NftTokenForRest>,
+    web::Json(nft_tokens): web::Json<Vec<NftTokenForRest>>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, NftTokensError> {
     let mut tx = pool.begin().await.context("Failed to start transaction.")?;
-    insert_nft_token_db(nft_token, &mut tx)
+    insert_nft_token_db(nft_tokens, &mut tx)
         .await
         .context("Failed to insert the nft token data into the database.")?;
     tx.commit()
@@ -108,30 +108,32 @@ pub async fn insert_nft_token(
 
 #[tracing::instrument(name = "Store nft tokens to database", skip(tx))]
 pub async fn insert_nft_token_db(
-    nft_token: NftTokenForRest,
+    nft_tokens: Vec<NftTokenForRest>,
     tx: &mut Transaction<'_, Postgres>,
 ) -> Result<(), anyhow::Error> {
-    sqlx::query_as!(
-        NftToken,
-        r#"
-        INSERT INTO nft_tokens (owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        ON CONFLICT (token_id) DO NOTHING
-        "#,
-        nft_token.owner_id,
-        nft_token.token_id,
-        nft_token.title,
-        nft_token.description,
-        nft_token.media,
-        nft_token.media_hash,
-        nft_token.copies,
-        nft_token.issued_at,
-        nft_token.expires_at,
-        Json(nft_token.model) as _,
-        Utc::now()
-    )
-    .execute(tx)
-    .await?;
+    for nft_token in nft_tokens {
+        sqlx::query_as!(
+            NftToken,
+            r#"
+            INSERT INTO nft_tokens (owner_id, token_id, title, description, media, media_hash, copies, issued_at, expires_at, model, db_created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            ON CONFLICT (token_id) DO NOTHING
+            "#,
+            nft_token.owner_id,
+            nft_token.token_id,
+            nft_token.title,
+            nft_token.description,
+            nft_token.media,
+            nft_token.media_hash,
+            nft_token.copies,
+            nft_token.issued_at,
+            nft_token.expires_at,
+            Json(nft_token.model) as _,
+            Utc::now()
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
 
     Ok(())
 }
