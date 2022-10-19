@@ -90,7 +90,8 @@ async fn requests_missing_authorization_are_rejected() {
 async fn insert_valid_nft_token_success() -> anyhow::Result<()> {
     let app = spawn_app().await;
     let token: dummies::NftToken = dummies::AliceNftToken.fake();
-    let response = app.post_nft_token(&token).await;
+    let token_to_insert = vec![&token];
+    let response = app.post_nft_token(&token_to_insert).await;
 
     let status = response.status();
     let body = response
@@ -121,10 +122,11 @@ async fn insert_valid_nft_token_success() -> anyhow::Result<()> {
 async fn insert_valid_two_equals_nft_token_reject_without_error_response() -> anyhow::Result<()> {
     let app = spawn_app().await;
     let token: dummies::NftToken = dummies::AliceNftToken.fake();
+    let tokens_to_insert = vec![&token];
     for _ in 0..2 {
         app.post_nft_token(&token).await;
 
-        let response = app.post_nft_token(&token).await;
+        let response = app.post_nft_token(&tokens_to_insert).await;
 
         let status = response.status();
         let body = response
@@ -174,7 +176,7 @@ async fn insert_invalid_nft_token_rejects_and_returns_400_status() {
 #[tokio::test]
 async fn insert_nft_token_fails_and_return_500_if_there_is_a_fatal_database_error() {
     let app = spawn_app().await;
-    let token: dummies::NftToken = dummies::AliceNftToken.fake();
+    let token: Vec<dummies::NftToken> = vec![dummies::AliceNftToken.fake()];
     sqlx::query!("ALTER TABLE nft_tokens DROP COLUMN owner_id;",)
         .execute(&app.db_pool)
         .await

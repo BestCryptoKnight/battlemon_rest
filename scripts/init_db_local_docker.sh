@@ -28,7 +28,7 @@ if [[ -z "${SKIP_DOCKER}" ]]; then
     --env POSTGRES_DB=${DB_NAME} \
     --network indexer-net \
     --publish "${DB_PORT}":5432 \
-    --name db \
+    --name db_test \
     --detach \
     postgres postgres -N 1000
 fi
